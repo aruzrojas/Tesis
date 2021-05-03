@@ -15,28 +15,43 @@ using namespace std;
 int seed;
 
 
-// Class of the node
+// Clase Nodo
 class Node {
 public:
     int vertexNumber;
- 
-    // Adjacency list that shows the
-    // vertexNumber of child vertex
-    // and the weight of the edge
-    vector<pair<int, int> > children;
+
+
+    //Vecinos del nodo con su respectivo peso
+    vector<vector<int>> children;
     Node(int vertexNumber)
     {
         this->vertexNumber = vertexNumber;
     }
  
-    // Function to add the child for
-    // the given node
-    void add_child(int vNumber, int length)
+    //Añadir vecino (hijo) a un nodo
+    void add_child(int vNumber, int length, int r1, int r2, int r3, int r4, int r5)
     {
-        pair<int, int> p;
-        p.first = vNumber;
-        p.second = length;
+        vector<int> p;
+        p.push_back(vNumber);
+        p.push_back(length);
+        p.push_back(r1);
+        p.push_back(r2);
+        p.push_back(r3);
+        p.push_back(r4);
+        p.push_back(r5);
+
+
+        //p[0] = vNumber;
+        //p[1] = length;
+        //p[2] = r1; 
+        //p[3] = r2;
+        //p[4] = r3;
+        //p[5] = r4;
+        //p[6] = r5;
         children.push_back(p);
+    }
+    int getVertexNumber(){
+        return this->vertexNumber;
     }
 };
  
@@ -45,7 +60,7 @@ public:
 // vertex to the destination vertex
 vector<int> dijkstraDist(
     vector<Node*> g,
-    int s, vector<int>& path)
+    int s, vector<int>& path, int posLenghtOrRi)
 {
     // Stores distance of each
     // vertex from source vertex
@@ -69,13 +84,12 @@ vector<int> dijkstraDist(
     // marked as visited
     unordered_set<int> sett;
     while (true) {
- 
         // Mark current as visited
         visited[current] = true;
         for (int i = 0;
              i < g[current]->children.size();
              i++) {
-            int v = g[current]->children[i].first;
+            int v = g[current]->children[i][0];
             if (visited[v])
                 continue;
  
@@ -84,8 +98,7 @@ vector<int> dijkstraDist(
             sett.insert(v);
             int alt
                 = dist[current]
-                  + g[current]->children[i].second;
- 
+                  + g[current]->children[i][posLenghtOrRi];
             // Condition to check the distance
             // is correct and update it
             // if it is minimum from the previous
@@ -116,28 +129,11 @@ vector<int> dijkstraDist(
     return dist;
 }
  
-// Function to print the path
-// from the source vertex to
-// the destination vertex
-void printPath(vector<int> path,
-               int i, int s)
-{
-    if (i != s) {
- 
-        // Condition to check if
-        // there is no path between
-        // the vertices
-        if (path[i] == -1) {
-            cout << "Path not found!!";
-            return;
-        }
-        printPath(path, path[i], s);
-        cout << path[i] << " ";
-    }
-}
 
 /* FIN DIJKSTRAS*/
 
+
+//Funcion Random
 float float_rand(float a, float b) {
     float retorno = 0;
 
@@ -152,9 +148,11 @@ float float_rand(float a, float b) {
     return retorno;
 }
 
+//Parametros por consola
 void Capture_Params(int argc, char **argv) {
     seed = atoi(argv[1]);
 }
+
 
 struct Nodo {
     string tipo_material;
@@ -210,6 +208,7 @@ int main(int argc, char** argv)
 
 	vector<Node*> v;
 	
+    //Lectura archivo grande
 	while(in) {
 		in.getline(str, 255); 
 		if(in){
@@ -270,6 +269,7 @@ int main(int argc, char** argv)
 	}
 	in.close();
 
+    //LECTURA DE NODOS
 	ifstream in2("nodes.txt");
 
 	if(!in2) {
@@ -280,7 +280,7 @@ int main(int argc, char** argv)
 	while(in2) {
 		in2.getline(str, 255); 
 		if(in2){
-			cout << "str " << str << endl;		
+			//cout << "str " << str << endl;		
             std::vector<std::string> out;
             tokenize(str,'\t', out);
             for (auto &line: out) {
@@ -288,23 +288,15 @@ int main(int argc, char** argv)
 				nodos.push_back(std::stoi(line));
 				Node *a = new Node(std::stoi(line));
 				v.push_back(a);
-				cout << "Número es: " << line << endl;
+				//cout << "Número es: " << line << endl;
 			}
 		}
 	} 
 	
 	in2.close();
 
-
-	cout << "tamaño nodos " << nodos.size() << endl;
-
-
-
-	cout << "alo" << endl;
+	//Agregar vecinos a cada nodo
 	for (i = 0; i < nodosB.size(); i++){
-		//cout << " fjs" << endl;
-
-		//cout << "parte 3" << endl;
 
 		int vertexNumberA = nodosA[i];
 		int vertexNumberB = nodosB[i];
@@ -314,54 +306,32 @@ int main(int argc, char** argv)
 
 		int indexA = std::distance(nodos.begin(), itA);
 		int indexB = std::distance(nodos.begin(), itB);
-
-
-		cout << "Para A: " << endl;
-		cout << "indexA " << indexA	<< endl;
-		cout << "ID nodo es: " << vertexNumberA << endl;
-
-		cout << "----------------------------" << endl;
-
-		cout << "Para B: " << endl;
-		cout << "indexB " << indexB	<< endl;
-		cout << "ID nodo es: " << vertexNumberB << endl;
-		//cout << "vertice es " << vertexNumber << endl;
-		//cout << "numero es " << index << endl << endl;
-
 		
-
-		v[indexA]->add_child(indexB,longitud[i]);
-
-
-		cout << "longitd: " << longitud[i] << endl;
-		//cout << "parte 4" << endl;
-		cout << "Para el nodo " << nodos[indexA] << " contra el nodo"
-		<< nodos[indexB] << " la distancia es de: " << 
-		longitud[i]<< endl;
-
-		cout << "valor de i es " << i << endl;
-
-		//Distance of 1000006th vertex from source vertex 12741 is: 7255
+		v[indexA]->add_child(indexB,longitud[i], R1[i], R2[i], R3[i], R4[i], R5[i]);
 
 	}
 
-	cout << " sali" << endl;
-
-	cout << "tamaños de vector v es " << v.size() << endl;
-
-	int s = 15;
-
+	int s = 1894; //Posicion del nodo, al cual se le quiere buscar caminos más cortos
     vector<int> path(v.size());
     vector<int> dist
-        = dijkstraDist(v, s, path);
-	
+        = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5
+    //dist = arreglo de distancias de un nodo para todos    
+    
 
-	cout << " alo" << endl;
-
-
-
-
-	for (int i = 0; i < dist.size(); i++) {
+    for (int i = 0; i < dist.size(); i++) {
+        if (dist[i] == infi) {
+            cout << i << " and " << s
+                 << " are not connected"
+                 << endl;
+            continue;
+        }
+        cout << "Distance of " << i
+             << "th vertex from source vertex "
+             << s << " is: "
+             << dist[i] << endl;
+    }
+    //for para revisar vecinos del nodo en la posicion s
+	/*for (int i = 0; i < dist.size(); i++) {
 	    if (dist[i] == infi) {
 	        cout << nodos[i] << " and " << 
 	        nodos[s]
@@ -373,13 +343,108 @@ int main(int argc, char** argv)
 	         << "th vertex from source vertex "
 	         << nodos[s] << " is: "
 	         << dist[i] << endl;
-	}
+	}*/
 
-	cout << dist.size() << endl;
+	//----FIN LECTURA EXCEL------
 
-	cout << v[0]->vertexNumber << endl;
-	cout << v[v.size()-1]->vertexNumber << endl;
-	/* FIN LECTURA EXCEL */
+    //----LEER ARCHIVOS TXT------
+
+    vector<string> archivos {"peligro-mezcla4-min-riesgo-zona1-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona2-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona3-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona4-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona5-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona6-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona7-2k-AE.3.hazmat"};
+    
+    vector<float> alfas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
+
+
+    
+
+
+    //LEER ARCHIVOS DE ZONAS, PARA OBTENER LOS CLIENTES
+
+    fstream file;  
+    string nombre_archivo;
+    unsigned i_arc = 0;
+    int cont = -1;
+    string line;
+
+    vector<int> clientes;
+
+
+    cout << endl << endl;
+    for (i_arc = 0; i_arc < archivos.size(); i_arc++){ 
+        //file << "Archivo: " << archivos[i_arc] << endl;
+        //file << endl;
+
+        cont = -1;
+
+        //vector<float> c_vacio;
+        //vector<float> capacidades;
+        //vector<string> materiales;
+        //vector<Nodo> Nodos;
+        //vector<Camion> Camiones;
+        int n_nodos;
+
+
+        nombre_archivo = archivos[i_arc];
+
+        ifstream myfile;
+        myfile.open(nombre_archivo);
+
+        if (!myfile.is_open()){
+            perror("Error al abrir el archivo");
+            exit(EXIT_FAILURE);
+        }
+
+        while(getline(myfile,line)){
+            cont = cont + 1;
+            if (cont == 0){
+                n_nodos = std::stoi(line);
+            }
+            else if (cont == 1){
+
+                std::vector<std::string> out;
+                tokenize(line, ' ', out);
+                for (auto &line: out) { //NODO DEPOT
+                    if (i_arc == 0){ //SOLO SE AGREGA EL NODO DEPOT UNA VEZ
+                        clientes.push_back(std::stoi(line));
+                        break;
+                    }
+                    //cout << "valor de line es " << line << endl; 
+                }
+
+                cont = cont + 1;
+
+                while (getline(myfile,line) && cont != n_nodos + 1){ 
+
+                    cont = cont + 1;
+                    std::vector<std::string> out;
+                    tokenize(line, ' ', out);
+                    
+                    for (auto &line: out) {
+                        //cout << "valor de line es " << line << endl;    
+                        clientes.push_back(std::stoi(line)); //SE AGREGAN LOS CLIENTES
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    //cout << "tamaño de clientes es " << clientes.size() << endl;
+
+    /*for (i = 0; i < clientes.size(); i++){
+        cout << "Cliente: " << clientes[i] << endl;
+    }*/
+
+    //CLIENTES: vector de clientes, con sus respectivos ID
+    //int s = 1894; //Posicion del nodo, al cual se le quiere buscar caminos más cortos
+    //vector<int> path(v.size()); Vector de caminos
+    //vector<int> dist = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5 ... Vector de caminos mas cortos desde 's' a los demás
+    //dist = arreglo de distancias de un nodo para todos    
 
 	/*Capture_Params(argc,argv);
 	srand48(seed);
