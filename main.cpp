@@ -346,7 +346,7 @@ int main(int argc, char** argv)
 
 	int s = 1894; //Posicion del nodo, al cual se le quiere buscar caminos más cortos
     vector<int> path(v.size());
-    vector<int> dist
+    /*vector<int> dist
         = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5
     //dist = arreglo de distancias de un nodo para todos    
     
@@ -362,7 +362,7 @@ int main(int argc, char** argv)
              << "th vertex from source vertex "
              << s << " is: "
              << dist[i] << endl;
-    }
+    }*/
     //for para revisar vecinos del nodo en la posicion s
 	/*for (int i = 0; i < dist.size(); i++) {
 	    if (dist[i] == infi) {
@@ -543,6 +543,33 @@ int main(int argc, char** argv)
         }
     }
     
+    /*GREEDY*/
+
+    for (i = 0; i < clientesFile.size(); i++){
+
+        //vector<int> dist = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5  (es por posicion)
+
+        std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), vertexNumberA);
+        std::vector<int>::iterator itB = std::find(nodos.begin(), nodos.end(), vertexNumberB);
+
+        int indexA = std::distance(nodos.begin(), itA);
+        int indexB = std::distance(nodos.begin(), itB);
+        
+        vector<int> dist = dijkstraDist(v, indexA, path, 1);
+
+        //EJEMPLO de clientesFile: 22821 (depot) -> 31311 -> 12314 -> .... (->: puede haber nodos entre medio, los ids son clientes)
+        //dist es un vector con las distancias más cortas desde indexA, hacia todos los nodos
+        //por lo tanto hay que buscar el dist[indexB] y obtener los nodos entre ese camino
+        //añadir 
+        //hacer lo miso con el siguiente
+
+
+        //dist = arreglo de distancias de un nodo para todos    
+    
+
+
+
+    }
 
 
     for (i = 0; i < clientesFile.size(); i++){
