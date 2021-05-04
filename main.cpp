@@ -32,6 +32,7 @@ public:
     void add_child(int vNumber, int length, int r1, int r2, int r3, int r4, int r5)
     {
         vector<int> p;
+
         p.push_back(vNumber);
         p.push_back(length);
         p.push_back(r1);
@@ -40,21 +41,50 @@ public:
         p.push_back(r4);
         p.push_back(r5);
 
-
-        //p[0] = vNumber;
-        //p[1] = length;
-        //p[2] = r1; 
-        //p[3] = r2;
-        //p[4] = r3;
-        //p[5] = r4;
-        //p[6] = r5;
         children.push_back(p);
     }
     int getVertexNumber(){
         return this->vertexNumber;
     }
 };
+
+class Truck{
+
+public:
+    int id;
+    int capacidad;
+
+    vector<int> nodosVisitados;
+
+    Truck(int id){
+        this->id = id;
+    }
+
+    void add_nodo(int vNumber){
+        nodosVisitados.push_back(vNumber);
+    }
+};
  
+
+int funcion_evaluacion(vector<Truck*> t, int alpha){
+
+    int z;
+    int z1;
+    int z2;
+
+    int i;
+
+    for (i = 0; i < t.size(); i++){
+        continue;
+    }
+
+    z1 = z1 + z1*alpha;
+    z2 = z2 + z2*(1-alpha);
+    z = z1*alpha + z2*(1-alpha); 
+
+    return z;
+}
+
 // Function to find the distance of
 // the node from the given source
 // vertex to the destination vertex
@@ -207,6 +237,7 @@ int main(int argc, char** argv)
 	int i = 0;
 
 	vector<Node*> v;
+    vector<Truck*> t;
 	
     //Lectura archivo grande
 	while(in) {
@@ -294,6 +325,8 @@ int main(int argc, char** argv)
 	} 
 	
 	in2.close();
+
+    /*FIN LECTURA DE NODOS*/
 
 	//Agregar vecinos a cada nodo
 	for (i = 0; i < nodosB.size(); i++){
@@ -426,11 +459,125 @@ int main(int argc, char** argv)
                     
                     for (auto &line: out) {
                         //cout << "valor de line es " << line << endl;    
-                        clientes.push_back(std::stoi(line)); //SE AGREGAN LOS CLIENTES
+                        clientes.push_back(std::stoi(line)); //SE AGREGAN LOS ID DE LOS CLIENTES
                         break;
                     }
                 }
             }
+        }
+    }
+
+    vector<vector<float>> matrizDistancias;
+    vector<vector<float>> matrizRiesgo1;
+    vector<vector<float>> matrizRiesgo2;
+    vector<vector<float>> matrizRiesgo3;
+    vector<vector<float>> matrizRiesgo4;
+    vector<vector<float>> matrizRiesgo5;
+
+    int vertexNumberA;
+    int vertexNumberB;
+    int indexA;
+    int indexB;
+
+    Node* nodoA;
+
+
+    //PARA EL PRIMER NODO
+    ifstream myfile;
+    string fileToTest= "peligro-mezcla4-min-riesgo-zona1-2k-AE.3.hazmat";
+    myfile.open(fileToTest);
+
+    vector<int> clientesFile;
+
+
+
+    //22821: nodo Depot
+    int n_camiones;
+    int n_nodos;
+    cont = -1;
+    i = 0;
+    j = 0;
+    
+
+    if(!myfile.is_open()) {
+      perror("Error open");
+      exit(EXIT_FAILURE);
+    }
+    while(getline(myfile,line)){
+        cont = cont + 1;
+        if (cont == 0){
+            n_nodos = std::stoi(line); //cantidad de nodos
+        }
+        else if (cont == 1){
+
+            std::vector<std::string> out;
+            tokenize(line, ' ', out);
+            for (auto &line: out) { //NODO DEPOT
+            
+                clientesFile.push_back(std::stoi(line));
+                break;
+             
+                //cout << "valor de line es " << line << endl; 
+            }
+
+            cont = cont + 1;
+
+            while (getline(myfile,line) && cont != n_nodos + 2){ 
+
+                cont = cont + 1;
+                std::vector<std::string> out;
+                tokenize(line, ' ', out);
+
+                if (cont == n_nodos + 2){
+                    n_camiones = std::stoi(line);
+                    break;
+                }
+
+                for (auto &line: out) {
+                    //cout << "valor de line es " << line << endl;    
+                    clientesFile.push_back(std::stoi(line)); //SE AGREGAN LOS ID DE LOS CLIENTES
+                    break;
+                }
+                
+            }
+        }
+    }
+    
+
+
+    for (i = 0; i < clientesFile.size(); i++){
+        cout << "cliente: " << clientesFile[i] << endl;
+    }
+
+    cout << "tamaño clientesFile: " << clientesFile.size() << endl;
+    cout << "número de nodos: " << n_nodos << endl;
+    cout << "número de camiones: " << n_camiones << endl;
+
+    for (i = 0; i < v.size(); i++){
+        nodoA = v[i];
+        //cout << "-------------" << endl;
+        //cout << "Hijos del nodo: " << nodoA->vertexNumber << endl;
+
+        for (j = 0; j < nodoA->children.size(); j++){
+
+            if (nodoA->vertexNumber == 35731){
+                cout << "Hijo nodo: " << v[nodoA->children[j][0]]->vertexNumber << endl;
+            }
+            //cout << "Hijo nodo: " << v[nodoA->children[j][0]]->vertexNumber << endl;
+            //cout << "Hijo nodo: " << nodoA->children[j][1] << endl;
+            /*vertexNumberA = nodosA[i];
+            vertexNumberB = nodosB[j];
+
+            std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), vertexNumberA);
+            std::vector<int>::iterator itB = std::find(nodos.begin(), nodos.end(), vertexNumberB);
+
+            int indexA = std::distance(nodos.begin(), itA);
+            int indexB = std::distance(nodos.begin(), itB);
+
+            hijosNodoA = v[i]->children[];
+
+            matrizDistancias[i][j] = v[i]->children[i][posLenghtOrRi]*/
+
         }
     }
 
