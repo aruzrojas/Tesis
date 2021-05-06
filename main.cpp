@@ -48,16 +48,34 @@ public:
     }
 };
 
+class Cliente {
+    public:
+        int vertexNumber;
+        int cantidad;
+        string material;
+    Cliente (int vertexNumber, int cantidad, string material){
+        this->vertexNumber = vertexNumber;
+        this->cantidad = cantidad;
+        this->material = material;
+    }
+};
+
 class Truck{
 
 public:
     int id;
-    int capacidad;
+    float capacidad;
+    int nodo_actual;
+    string mat_dom;
+    string ruta;
+    vector <string> cargados;
+    vector <int> clientes;
 
     vector<int> nodosVisitados;
 
-    Truck(int id){
+    Truck(int id, int capacidad){
         this->id = id;
+        this->capacidad = capacidad;
     }
 
     void add_nodo(int vNumber){
@@ -389,7 +407,7 @@ int main(int argc, char** argv)
                             "peligro-mezcla4-min-riesgo-zona5-2k-AE.3.hazmat",
                             "peligro-mezcla4-min-riesgo-zona6-2k-AE.3.hazmat",
                             "peligro-mezcla4-min-riesgo-zona7-2k-AE.3.hazmat"};
-    
+        
     vector<float> alfas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
 
 
@@ -398,6 +416,7 @@ int main(int argc, char** argv)
 
     //LEER ARCHIVOS DE ZONAS, PARA OBTENER LOS CLIENTES
 
+    /*
     fstream file;  
     string nombre_archivo;
     unsigned i_arc = 0;
@@ -406,19 +425,9 @@ int main(int argc, char** argv)
 
     vector<int> clientes;
 
-
     cout << endl << endl;
     for (i_arc = 0; i_arc < archivos.size(); i_arc++){ 
-        //file << "Archivo: " << archivos[i_arc] << endl;
-        //file << endl;
-
         cont = -1;
-
-        //vector<float> c_vacio;
-        //vector<float> capacidades;
-        //vector<string> materiales;
-        //vector<Nodo> Nodos;
-        //vector<Camion> Camiones;
         int n_nodos;
 
 
@@ -446,7 +455,6 @@ int main(int argc, char** argv)
                         clientes.push_back(std::stoi(line));
                         break;
                     }
-                    //cout << "valor de line es " << line << endl; 
                 }
 
                 cont = cont + 1;
@@ -458,7 +466,6 @@ int main(int argc, char** argv)
                     tokenize(line, ' ', out);
                     
                     for (auto &line: out) {
-                        //cout << "valor de line es " << line << endl;    
                         clientes.push_back(std::stoi(line)); //SE AGREGAN LOS ID DE LOS CLIENTES
                         break;
                     }
@@ -466,6 +473,7 @@ int main(int argc, char** argv)
             }
         }
     }
+    */
 
     vector<vector<float>> matrizDistancias;
     vector<vector<float>> matrizRiesgo1;
@@ -484,21 +492,34 @@ int main(int argc, char** argv)
 
     //PARA EL PRIMER NODO
     ifstream myfile;
-    string fileToTest= "peligro-mezcla4-min-riesgo-zona1-2k-AE.3.hazmat";
+    string fileToTest= "peligro-mezcla4-min-riesgo-zona7-2k-AE.3.hazmat";
     myfile.open(fileToTest);
 
     vector<int> clientesFile;
 
 
 
+
     //22821: nodo Depot
     int n_camiones;
     int n_nodos;
-    cont = -1;
+    int cont = -1;
     i = 0;
     j = 0;
     
+    vector<float> capacidades;
+    int id_truck = 0;
+    string line;
 
+
+    vector<Cliente*> clientes;
+    vector<Truck*> camiones;
+
+    int clienteVertex;
+    int cantidad;
+    string material;
+    int i_arc;
+    int cantidad_total = 0;
     if(!myfile.is_open()) {
       perror("Error open");
       exit(EXIT_FAILURE);
@@ -508,41 +529,55 @@ int main(int argc, char** argv)
         if (cont == 0){
             n_nodos = std::stoi(line); //cantidad de nodos
         }
-        else if (cont == 1){
-
+        else if (cont >= 1 && cont < n_nodos + 1){
+            i_arc = 0;
             std::vector<std::string> out;
             tokenize(line, ' ', out);
-            for (auto &line: out) { //NODO DEPOT
-            
-                clientesFile.push_back(std::stoi(line));
-                break;
-             
-                //cout << "valor de line es " << line << endl; 
-            }
-
-            cont = cont + 1;
-
-            while (getline(myfile,line) && cont != n_nodos + 2){ 
-
-                cont = cont + 1;
-                std::vector<std::string> out;
-                tokenize(line, ' ', out);
-
-                if (cont == n_nodos + 2){
-                    n_camiones = std::stoi(line);
-                    break;
-                }
-
-                for (auto &line: out) {
-                    //cout << "valor de line es " << line << endl;    
-                    clientesFile.push_back(std::stoi(line)); //SE AGREGAN LOS ID DE LOS CLIENTES
-                    break;
-                }
+            for (auto &line: out) { 
                 
+                if (i_arc == 0){ 
+                    clienteVertex = std::stoi(line);
+                    i_arc = i_arc + 1;
+                }
+                else if (i_arc == 1){
+                    cantidad = std::stoi(line);
+                    i_arc = i_arc + 1;
+                    cantidad_total = cantidad_total + cantidad;
+                }
+                else if (i_arc == 2){
+                    material = line;
+                }
+
+            }
+            Cliente *client = new Cliente(clienteVertex, cantidad, material);            
+            clientes.push_back(client);
+        }
+        else if (cont == n_nodos + 1 ){
+            cout << "cont es " << cont << endl; 
+            cout << "line es " << line << endl;
+            n_camiones = std::stoi(line);
+        }  
+
+        else if (cont == n_nodos+  2){
+            int id = 0;
+            std::vector<std::string> out;
+            tokenize(line, ' ', out);
+            for (auto &line: out) { 
+                id = id + 1;
+                Truck *camion = new Truck(id, std::stoi(line));
+                camiones.push_back(camion);
             }
         }
+        else if (cont > n_nodos + 2){
+            cout << line << endl;            
+            break;
+        }
+
+
     }
-    
+
+    cout << "cantidad total es " << cantidad_total << endl;
+     
     /*GREEDY*/
 
     for (i = 0; i < clientesFile.size(); i++){
@@ -563,22 +598,9 @@ int main(int argc, char** argv)
         //añadir 
         //hacer lo miso con el siguiente
 
-
         //dist = arreglo de distancias de un nodo para todos    
-    
-
-
-
     }
 
-
-    for (i = 0; i < clientesFile.size(); i++){
-        cout << "cliente: " << clientesFile[i] << endl;
-    }
-
-    cout << "tamaño clientesFile: " << clientesFile.size() << endl;
-    cout << "número de nodos: " << n_nodos << endl;
-    cout << "número de camiones: " << n_camiones << endl;
 
     for (i = 0; i < v.size(); i++){
         nodoA = v[i];
