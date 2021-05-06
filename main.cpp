@@ -576,7 +576,9 @@ int main(int argc, char** argv)
 
     }
 
-    cout << "cantidad total es " << cantidad_total << endl;
+    while (cantidad_total > 0){
+        
+    }
      
     /*GREEDY*/
 
