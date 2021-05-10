@@ -16,6 +16,9 @@ int seed;
 
 
 // Clase Nodo
+
+
+
 class Node {
 public:
     int vertexNumber;
@@ -70,12 +73,12 @@ public:
     string ruta;
     vector <string> cargados;
     vector <int> clientes;
-
-    vector<int> nodosVisitados;
+    vector <int> nodosVisitados;
 
     Truck(int id, int capacidad){
         this->id = id;
         this->capacidad = capacidad;
+        this->ruta = "";
     }
 
     void add_nodo(int vNumber){
@@ -179,6 +182,74 @@ vector<int> dijkstraDist(
  
 
 /* FIN DIJKSTRAS*/
+
+
+int letra_to_pos(string letra, vector<string> materiales){
+        unsigned co;
+        for (co = 0; co < materiales.size(); co++){
+            if (materiales[co] == letra){
+                return co;
+            }
+        }
+        return -1;
+}
+
+char compatible(string& m, string& r, vector<string> materiales){   //STRING M ES EL QUE TIENE, STRING R ES EL QUE QUIERE LLEVAR
+    vector<vector<char>> COM{ {'A', '-', 'C', 'D', '-' }, 
+                        {'-', 'B', 'C', 'D', 'E' }, 
+                        {'C', 'C', 'C', '-', 'E' },
+                        {'D', 'D', '-', 'D', 'E' },
+                        {'-', 'E', 'E', 'E', 'E' }};     
+
+    int posi = letra_to_pos(m, materiales);
+    int posj = letra_to_pos(r, materiales);
+    return COM[posi][posj];
+}
+
+int compatible_todos(vector<string> cargados, string & r, vector<string> materiales){
+    int pos = letra_to_pos(r, materiales); //POSICION DEL MATERIAL r
+    vector<vector<char>> COM{ {'A', '-', 'C', 'D', '-' }, 
+                        {'-', 'B', 'C', 'D', 'E' }, 
+                        {'C', 'C', 'C', '-', 'E' },
+                        {'D', 'D', '-', 'D', 'E' },
+                        {'-', 'E', 'E', 'E', 'E' }};     
+    unsigned i;
+    int pos_c;
+    char guion = '-';
+
+    for (i = 0; i < cargados.size(); i++){
+        pos_c = letra_to_pos(cargados[i],materiales);
+        if (COM[pos_c][pos] == guion){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+char actualizar_dominante(vector<string> cargados, vector<string> materiales){
+   vector<vector<char>> COM{ {'A', '-', 'C', 'D', '-' }, 
+                    {'-', 'B', 'C', 'D', 'E' }, 
+                    {'C', 'C', 'C', '-', 'E' },
+                    {'D', 'D', '-', 'D', 'E' },
+                    {'-', 'E', 'E', 'E', 'E' }};
+
+    int dom = letra_to_pos(cargados[0],materiales);  
+
+    char m_dom = COM[dom][dom];
+    unsigned i;
+    int posi;
+    for(i = 0; i < cargados.size(); i++){
+        if (m_dom == '-'){
+            return '-';
+        }
+            posi = letra_to_pos(cargados[i],materiales);
+            m_dom = COM[dom][posi];
+            dom = letra_to_pos(std::string(1, m_dom),materiales);
+    }
+    return m_dom;
+
+}
+    
 
 
 //Funcion Random
@@ -576,11 +647,55 @@ int main(int argc, char** argv)
 
     }
 
-    while (cantidad_total > 0){
-        
+    /*GREEDY*/
+
+    Capture_Params(argc,argv);
+    srand48(seed);
+    int prob;
+    prob = float_rand(1,clientes.size());
+    cout << "prob es " << prob << endl;
+    int its = 0;
+    int idClient;
+    int indexClient;
+
+    int idTruck;
+    int indexTruck;
+    string mat_client;
+    while (cantidad_total > 0 && its < 15){
+        its = its + 1;
+        indexClient = float_rand(0, clientes.size());
+        indexTruck = float_rand(0, camiones.size());
+
+        cout << "index cliente es " << indexClient << endl;
+        idClient = clientes[indexClient]->vertexNumber;
+        cout << "Cliente es " << idClient << endl;
+
+        cout << "index camion es " << indexTruck << endl;
+        idTruck = camiones[indexTruck]->id;
+        cout << "Camion es " << idTruck << endl;
+
+        //se tiene camion y cliente al azar
+
+        if (camiones[indexTruck]->clientes.size() == 0){ //PARA EL PRIMER CLIENTE DEL CAMION
+            camiones[indexTruck]->clientes.push_back(idClient);   //agregar cliente
+            mat_client = clientes[indexClient]->material;         //obtener material del cliente
+            camiones[indexTruck]->cargados.push_back(mat_client); //agregar material del cliente
+            camiones[indexTruck]->mat_dom = mat_client;           //colocar como dominante el mat del cliente
+            camiones[indexTruck]->capacidad = camiones[indexTruck]->capacidad - clientes[indexClient]->cantidad;
+            camiones[indexTruck]->nodo_actual = clientes[indexClient]->vertexNumber;
+            camiones[indexTruck]->ruta = camiones[indexTruck]->ruta + " -> " clientes[indexTruck]->vertexNumber;
+            camiones[indexTruck]->nodosVisitados.push_back(clientes[indexClient]->vertexNumber):
+        }
+
+        for (i = 0; i < camiones[indexTruck]->clientes.size(); i++){
+            
+        }
+
+
+
     }
      
-    /*GREEDY*/
+    
 
     for (i = 0; i < clientesFile.size(); i++){
 
