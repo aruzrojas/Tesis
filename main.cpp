@@ -321,10 +321,6 @@ void tokenize(std::string const &str, const char delim,   //SEPARA LINEA DE TEXT
 }
 
 
-void func(vector<int> &vect)
-{
-   vect.push_back(30);
-}
 
 
 void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<int> &vector_clientes, vector<Node*> &v,
@@ -583,6 +579,14 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
 
     return Z;
 }
+
+/*void aplicar_movimiento(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<int> &vector_clientes, vector<Node*> &v,
+                        vector<int> &nodos, vector <string> &materiales, int indexDepot){
+
+
+
+}*/
+
 
 int main(int argc, char** argv)
 {
@@ -1011,18 +1015,12 @@ int main(int argc, char** argv)
             cout << "Material del cliente: " <<  clientes[indexClient]->material << endl;
         }
     }
-    
-    
+
 
     vector<int> vect;
     vect.push_back(10);
     vect.push_back(20);
    
-    func(vect);
-  
-    for (int i=0; i<vect.size(); i++){
-       cout << vect[i] << endl;
-    }
 
     /*for (i = 0; i < clientesFile.size(); i++){
 
