@@ -39,10 +39,10 @@ public:
         p.push_back(vNumber);
         p.push_back(length );
         p.push_back(r1);
-        p.push_back(r2 );
-        p.push_back(r3 );
-        p.push_back(r4 );
-        p.push_back(r5 );
+        p.push_back(r2);
+        p.push_back(r3);
+        p.push_back(r4);
+        p.push_back(r5);
 
         children.push_back(p);
     }
@@ -87,30 +87,7 @@ public:
 };
  
 
-vector<int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, int alpha){
 
-    int z;
-    int z1;
-    int z2;
-
-    vector<int> Z;
-
-    int i;
-
-    for (i = 0; i < t.size(); i++){
-        continue;
-    }
-
-    z1 = z1 + z1;
-    z2 = z2 + z2;
-    z = z1*alpha + z2*(1-alpha); 
-
-    Z.push_back(z);  //[0]
-    Z.push_back(z1); //[1]
-    Z.push_back(z2); //[2]
-
-    return Z;
-}
 
 // Function to find the distance of
 // the node from the given source
@@ -366,6 +343,8 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
 
     vector<int> path(v.size());
 
+    cout << "index depot es " << indexDepot << endl;
+
     while (cantidad_total > 0 && its < 30){
 
         its = its + 1;
@@ -401,10 +380,11 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
                 cantidad_total = cantidad_total - clientes[indexClient]->cantidad;
                 clientes[indexClient]->cantidad = 0;
 
-                vector<int> distancias = dijkstraDist(v, indexClient, path, 1);
+                vector<int> distancias = dijkstraDist(v, indexDepot, path, 1);
                 
 
-                z_distancias = z_distancias + distancias[indexDepot];
+                //z_distancias = z_distancias + distancias[indexDepot];
+                z_distancias = z_distancias + distancias[indexClient];
             }
         }
 
@@ -417,8 +397,14 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
             cout << "Nodo actual es  " << idClient << endl;
             std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClient);
             cout << "2 " << endl;
-            indexClient = std::distance(nodos.begin(), itA); //POS EN v DEL NODO ACTUAL DEL CAMION J
-            //cout << "indexclient es  " << indexClient << endl;
+            indexClient = std::distance(nodos.begin(), itA); //POS EN v DEL NODO ACTUAL DEL CAMION J 
+            //idClient es el vertexnumber del nodo actual de la ruta del camion
+            //indexclient es la posicion en v del nodo idclient
+
+            cout << "id camion es " << camiones[indexTruck]->id << endl;
+            cout << "indexclient es  " << indexClient << endl;
+            cout << "id client es " << idClient << endl;
+            cout << "index segun trucks es " << camiones[indexTruck]->nodo_actual << endl;
 
             vector<int> distancias = dijkstraDist(v, indexClient, path, 1);
             cout << "4 " << endl;
@@ -430,7 +416,7 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
             cout << "posi es " << posi << endl;
             //ACTUALIZAR VALORES
             if (posi != -1){
-
+                //se usan las mismas variables para declarar el proximo nodo idClient e indexClient porque ya se usaron arriba para el nodo actual 
                 idClient = v[posi]->vertexNumber; //corresponde al numero del vertice en posi (que en este caso debe ser un cliente)
                 //itA = std::find(nodos.begin(), nodos.end(), idClient);
                 //cout << "nodosposi vertex numer es " << v[posi]->vertexNumber << endl;
@@ -449,7 +435,8 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
                 camiones[indexTruck]->clientes.push_back(idClient);   //agregar cliente
                 mat_client = clientes[indexClient]->material;         //obtener material del cliente
                 camiones[indexTruck]->cargados.push_back(mat_client); //agregar material del cliente
-                camiones[indexTruck]->mat_dom = mat_client;           //colocar como dominante el mat del cliente
+
+                camiones[indexTruck]->mat_dom = actualizar_dominante(camiones[indexTruck]->cargados, materiales); //colocar como dominante el mat del cliente
                 camiones[indexTruck]->capacidad = camiones[indexTruck]->capacidad - clientes[indexClient]->cantidad;
                 camiones[indexTruck]->nodo_actual = clientes[indexClient]->vertexNumber;
                 cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
@@ -462,10 +449,139 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
                 clientes[indexClient]->cantidad = 0;
                 z_distancias = z_distancias + distancias[posi];
                 cout << "aqui " << endl; 
+
+                cout << "nodo actual " << indexClient << endl;
+                
             }
         }
     }    
     return;
+}
+
+
+
+vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, float alpha, 
+                                vector<string> materiales, int indexDepot){
+
+    int z = 0;
+    int z1 = 0;
+    int z2 = 0;
+
+    vector<int> path(v.size());
+
+    vector<int> Z;
+
+    int i;
+    int j;
+
+    int idClientA;
+    int idClientB;
+
+    int indexClientA;
+    int indexClientB;
+
+    vector<string> auxCargados;
+    vector<int> auxClientesTruck;
+    //vector<int> pesosDistancias;
+    //vector<int> pesosRiesgos;
+
+    int intMaterial;
+    int idClient;
+    //DEPOT AL PRIMER NODO
+    for (i = 0; i < t.size(); i ++){
+        if (t[i]->clientes.size() > 0){
+
+            auxCargados = t[i]->cargados;
+            t[i]->mat_dom = actualizar_dominante(auxCargados, materiales);
+            intMaterial = letra_to_pos(t[i]->mat_dom, materiales);
+
+            vector<int> pesosDistancias = dijkstraDist(v, indexDepot, path, 1);            //el 1 es para obtener los minimos de lontigud
+            vector<int> pesosRiesgos = dijkstraDist(v, indexDepot, path, intMaterial + 2); //el +2 es porque retorna numero del 0 al 5
+            idClient = t[i]->clientes[0];
+
+            std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClient);
+            int indexClient = std::distance(nodos.begin(), itA);
+
+            z1 = z1 + pesosDistancias[indexClient];
+            z2 = z2 + pesosRiesgos[indexClient];
+
+            cout << "distancia " << pesosDistancias[indexClient] << endl;
+            cout << "riesgos " << pesosRiesgos[indexClient] << endl;
+        }
+    }
+    
+
+    //ENTRE NODOS
+    for (i = 0; i < t.size(); i++){
+        if (t[i]->clientes.size() > 0){ 
+            auxClientesTruck = t[i]->clientes;
+            auxCargados = t[i]->cargados;
+            auxCargados.erase(auxCargados.begin());
+
+            while (auxCargados.size() >= 1){
+            //for (j = 0; j < t[i]->clientes.size()-1; j++){
+                t[i]->mat_dom = actualizar_dominante(auxCargados, materiales);
+                intMaterial = letra_to_pos(t[i]->mat_dom, materiales);
+                /*vector<int> dist
+            = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5
+                pesosDistancias = dijkstraDist(v, s, path, 1);            //el 1 es para obtener los minimos de lontigud
+                pesosRiesgos = dijkstraDist(v, s, path, intMaterial + 2); //el +2 es porque retorna numero del 0 al 5
+    */
+                //t[i]->clientes contiene el ID de los clientes (vertexNumber)
+                idClientA = auxClientesTruck[j];
+                idClientB = auxClientesTruck[j+1];
+
+                //cambiar dikstra por la pos del idclient a
+
+                std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClientA);
+                std::vector<int>::iterator itB = std::find(nodos.begin(), nodos.end(), idClientB);
+
+                indexClientA = std::distance(nodos.begin(), itA);
+                indexClientB = std::distance(nodos.begin(), itB);
+
+                vector<int> pesosDistancias = dijkstraDist(v, indexClientA, path, 1);            //el 1 es para obtener los minimos de lontigud
+                vector<int> pesosRiesgos = dijkstraDist(v, indexClientA, path, intMaterial + 2); //el +2 es porque retorna numero del 0 al 5 
+
+                z1 = z1 + pesosDistancias[indexClientB];
+                z2 = z2 + pesosRiesgos[indexClientB];
+                
+                auxClientesTruck.erase(auxClientesTruck.begin());
+                auxCargados.erase(auxCargados.begin());
+                //borrar el primero de auxclientes
+                cout << "distancias " << pesosDistancias[indexClientB] << endl;
+                cout << "riesgos " << pesosRiesgos[indexClientB] << endl;
+            }
+
+            //ULTIMO NODO A DEPOT
+            if (auxClientesTruck.size() == 1){
+
+                idClientA = auxClientesTruck[j];
+                std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClientA);
+                indexClientA = std::distance(nodos.begin(), itA);
+
+                vector<int> pesosDistancias = dijkstraDist(v, indexClientA, path, 1);
+
+                z1 = z1 + pesosDistancias[indexDepot]; 
+                cout << "distancias " << pesosDistancias[indexDepot] << endl;
+
+            }
+        }
+    }
+
+    
+
+    //z1 = z1 + z1;
+    //z2 = z2 + z2;
+    cout << "z1 * alpha " << z1*alpha << endl;
+    cout << "z2 * alpha " << z2*(1-alpha) << endl;
+
+    z = z1*alpha + z2*(1-alpha); 
+
+    Z.push_back(z);  //[0]
+    Z.push_back(z1); //[1]
+    Z.push_back(z2); //[2]
+
+    return Z;
 }
 
 int main(int argc, char** argv)
@@ -856,12 +972,22 @@ int main(int argc, char** argv)
 
     j = 0;
 
-    int alpha = 0.5;
+    float alpha = 0.5;
 
     solucionGreedy(camiones, clientes, vector_clientes, v,
                         nodos, materiales, indexDepot, cantidad_total);
 
     //cout << "cantidad total es " << cantidad_total << endl;
+
+    cout << "-------" << endl;
+    vector<int> solucionGral = funcion_evaluacion(camiones, v, nodos, clientes, alpha, 
+                                materiales, indexDepot);
+
+    cout << "-------" << endl;
+    cout << "valor es total es " << solucionGral[0] << endl;
+    cout << "valor z1 es " << solucionGral[1] << endl;
+    cout << "valor z2 es " << solucionGral[2] << endl;
+
 
     int k = 0;
 
