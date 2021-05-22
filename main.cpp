@@ -580,23 +580,87 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
     return Z;
 }
 
+void mov2Opt(vector<Truck*> &camiones, int c1, int i, int k){
+
+    int j;
+    cout << "vector original " << endl;
+    cout << "size es " << camiones[c1]->clientes.size();
+    for (j = 0; j < camiones[c1]->clientes.size(); j++){
+        cout << "Id Cliente " << camiones[c1]->clientes[j] << endl;
+    }
+
+    cout << "Valor i " << i << endl;
+    cout << "Valor k " << k << endl;
+    cout << "cambiando " << endl;
+
+    vector<int> ruta1(camiones[c1]->clientes.begin(), camiones[c1]->clientes.begin() + i-1);
+    vector<int> ruta2(camiones[c1]->clientes.begin() + i, camiones[c1]->clientes.begin() + k);
+    vector<int> ruta3(camiones[c1]->clientes.begin() + k, camiones[c1]->clientes.end());
+
+    cout << "RUTAS " << endl;
+
+    cout << "RUTA 1 " << endl;
+    for (j = 0; j < ruta1.size(); j++){
+        cout << "Id cliente " << ruta1[j] << endl;
+    }
+    cout << "RUTA 2 " << endl;
+    for (j = 0; j < ruta2.size(); j++){
+        cout << "Id cliente " << ruta2[j] << endl;
+    }
+    for (j = 0; j < ruta3.size(); j++){
+        cout << "Id cliente " << ruta3[j] << endl;
+    }
+    cout << "RUTA 3 " << endl;
+    cout << "Antes del reverse " << endl;
+    for (j = 0; j < ruta2.size(); j++){
+        cout << "Id cliente " << ruta2[j] << endl;
+    }
+
+    reverse(ruta2.begin(), ruta2.end());
+
+    cout << "Después del reverse " << endl;
+    for (j = 0; j < ruta2.size(); j++){
+        cout << "Id cliente " << ruta2[j] << endl;
+    }
+    camiones[c1]->clientes.clear();
+    camiones[c1]->clientes.insert( camiones[c1]->clientes.end(), ruta1.begin(), ruta1.end() );
+    camiones[c1]->clientes.insert( camiones[c1]->clientes.end(), ruta2.begin(), ruta2.end() );
+    camiones[c1]->clientes.insert( camiones[c1]->clientes.end(), ruta3.begin(), ruta3.end() );
+
+    //camiones[c1]->clientes = ruta1+ruta
+    /*for (j = 0; j < camiones.size(); j++){
+        cout << "Id Cliente" << camiones[c1]->clientes[j] << endl;
+    }
+
+    for (j = 0; j < camiones.size(); j++){
+        cout << "Id Cliente" << camiones[c1]->clientes[j] << endl;
+    }
+    for (j = 0; j < camiones.size(); j++){
+        cout << "Id Cliente" << camiones[c1]->clientes[j] << endl;
+    }*/
+    //ruta1 = (camiones[c1]->clientes);
+
+
+
+}
+
 int aplicar_movimiento(vector<Truck*> &camiones, vector<Cliente*> &clientes, int tipoMov, int c1, int c2, int pos1, int pos2){
 
     //RECORDAR QUE ESTA FUNCION DEBE RECIBIR AUX
     int idClientA;
     int idClientB;
     int i;
-
+    //RECORDAR VER COMPATIBILIDAD DEL MOVIMIENTO
     cout << "Antes del movimiento: " << endl << endl;
 
     cout << "Para camion: " << camiones[c1]->id << endl;
     for (i = 0; i < camiones[c1]->clientes.size(); i++){    
         cout << "Cliente con Id: " << camiones[c1]->clientes[i] << endl;
     }
-    cout << "Para camion: " << camiones[c2]->id << endl;
-    for (i = 0; i < camiones[c2]->clientes.size(); i++){    
-        cout << "Cliente con Id: " << camiones[c2]->clientes[i] << endl;
-    }
+    //cout << "Para camion: " << camiones[c2]->id << endl;
+    //for (i = 0; i < camiones[c2]->clientes.size(); i++){    
+    //    cout << "Cliente con Id: " << camiones[c2]->clientes[i] << endl;
+    //}
 
     if (tipoMov == 0){ //MOVIMIENTO INSERT
 
@@ -621,6 +685,16 @@ int aplicar_movimiento(vector<Truck*> &camiones, vector<Cliente*> &clientes, int
     }
 
     else if (tipoMov == 1){
+
+       // idClientB = 
+        mov2Opt(camiones, c1, pos1, pos2);
+
+        cout << "Despues del movimiento: " << endl << endl;
+        cout << "Para camion: " << camiones[c1]->id << endl;
+        for (i = 0; i < camiones[c1]->clientes.size(); i++){    
+            cout << "Cliente con Id: " << camiones[c1]->clientes[i] << endl;
+        }
+
         return 0;
     }
 
@@ -1002,7 +1076,7 @@ int main(int argc, char** argv)
 
     Capture_Params(argc,argv);
     srand48(seed);
-    int prob;
+    float prob;
     prob = float_rand(1,clientes.size());
     //cout << "prob es " << prob << endl;
     int its = 0;
@@ -1094,7 +1168,50 @@ int main(int argc, char** argv)
     int c1, c2, pos1, pos2;
 
     while (its < max_its){
-       for (i = 0; i < camiones.size(); i++){
+
+        prob = float_rand(0,1);
+        cout << "prob es " << prob << endl;
+        if (prob < 0.5){
+            c1 = float_rand(0, camiones.size());
+            c2 = float_rand(0, camiones.size());
+            pos1 = float_rand(0, camiones[c1]->clientes.size() );
+            pos2 = float_rand(0, camiones[c2]->clientes.size() );
+            tipoMov = 0;
+
+
+            //Truck *aux_camion1 = new Truck(camiones[c1]->id, camiones[c1]->capacidad);
+            //Truck *aux_camion2 = new Truck(camiones[c2]->id, camiones[c2]->capacidad);
+
+            if (c1 != c2){
+            /*    cout << "Valores del movimiento INSERT" << endl;
+                cout << "size de clientes del camion " << camiones[c1]->clientes.size() << endl;
+                cout << "c1 es " << c1 << endl;
+                cout << "c2 es " << c2 << endl;
+                cout << "pos1 es " << pos1 << endl;
+                cout << "pos2 es " << pos2 << endl;
+                //aplicar_movimiento(aux_camiones, aux_clientes, tipoMov, c1, c2, pos1, pos2);*/
+            }
+        }
+        else{ //2-opt
+            c1 = float_rand(0, camiones.size());
+            c2 = -1;
+            pos1 = float_rand(0, camiones[c1]->clientes.size() );
+            pos2 = float_rand(pos1, camiones[c1]->clientes.size() );
+
+            if (pos1 < pos2 and pos1 - 1 > 0 and pos2 + 1 < camiones[c1]->clientes.size()){
+                tipoMov = 1;
+                cout << "Valores del movimiento 2-OPT" << endl;
+                cout << "size de clientes del camion " << camiones[c1]->clientes.size() << endl;
+                cout << "c1 es " << c1 << endl;
+                cout << "c2 es " << c2 << endl;
+                cout << "pos1 es " << pos1 << endl;
+                cout << "pos2 es " << pos2 << endl;
+                aplicar_movimiento(aux_camiones, aux_clientes, tipoMov, c1, c2, pos1, pos2);
+            }
+
+        }
+
+        /*for (i = 0; i < camiones.size(); i++){
             for (k = 0; k < camiones.size(); k++){
                 for (j = 0; j < camiones[i]->clientes.size(); j++){
                     for (l = 0; l < camiones[k]->clientes.size(); l++){
@@ -1123,15 +1240,19 @@ int main(int argc, char** argv)
                         }
 
                         else{
+                            c1 = i;
+                            pos1 = k;
+                            aplicar_movimiento()
                             continue;
                         }
                     }
                 }
             }
-        }
+        }*/
 
         its = its + 1;
     }
+
 
     /*for (i = 0; i < clientesFile.size(); i++){
 
