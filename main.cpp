@@ -339,7 +339,7 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
 
     vector<int> path(v.size());
 
-    cout << "index depot es " << indexDepot << endl;
+    //cout << "index depot es " << indexDepot << endl;
 
     while (cantidad_total > 0 && its < 30){
 
@@ -369,7 +369,7 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
                 camiones[indexTruck]->mat_dom = mat_client;           //colocar como dominante el mat del cliente
                 camiones[indexTruck]->capacidad = camiones[indexTruck]->capacidad - clientes[indexClient]->cantidad;
                 camiones[indexTruck]->nodo_actual = clientes[indexClient]->vertexNumber;
-                cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
+                //cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
                 camiones[indexTruck]->ruta = camiones[indexTruck]->ruta +  std::to_string(clientes[indexClient]->vertexNumber) + " -> ";
                 camiones[indexTruck]->nodosVisitados.push_back(clientes[indexClient]->vertexNumber);
 
@@ -390,26 +390,26 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
             //cout << "entrando al for " << endl;
             //cout << "cantidad de cleintes es " << camiones[indexTruck]->clientes.size() << endl;
             idClient = camiones[indexTruck]->clientes[camiones[indexTruck]->clientes.size()-1];
-            cout << "Nodo actual es  " << idClient << endl;
+            //cout << "Nodo actual es  " << idClient << endl;
             std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClient);
-            cout << "2 " << endl;
+            //cout << "2 " << endl;
             indexClient = std::distance(nodos.begin(), itA); //POS EN v DEL NODO ACTUAL DEL CAMION J 
             //idClient es el vertexnumber del nodo actual de la ruta del camion
             //indexclient es la posicion en v del nodo idclient
 
-            cout << "id camion es " << camiones[indexTruck]->id << endl;
-            cout << "indexclient es  " << indexClient << endl;
-            cout << "id client es " << idClient << endl;
-            cout << "index segun trucks es " << camiones[indexTruck]->nodo_actual << endl;
+            //cout << "id camion es " << camiones[indexTruck]->id << endl;
+            //cout << "indexclient es  " << indexClient << endl;
+            //cout << "id client es " << idClient << endl;
+            //cout << "index segun trucks es " << camiones[indexTruck]->nodo_actual << endl;
 
             vector<int> distancias = dijkstraDist(v, indexClient, path, 1);
-            cout << "4 " << endl;
+            //cout << "4 " << endl;
             posi = obtener_minimo_compatibles(distancias, clientes, camiones[indexTruck]->mat_dom, materiales, camiones[indexTruck]->cargados, nodos);
             //OBTENER POSI DEL ID DEL CLIENTE EN DISTANCIAS, PARA OBTENER MIN DISTANCIA (GREEDY)
             //out << "posi es " << posi << endl;
             
-            cout << "min dist es " << distancias[posi] << endl;
-            cout << "posi es " << posi << endl;
+            //cout << "min dist es " << distancias[posi] << endl;
+            //cout << "posi es " << posi << endl;
             //ACTUALIZAR VALORES
             if (posi != -1){
                 //se usan las mismas variables para declarar el proximo nodo idClient e indexClient porque ya se usaron arriba para el nodo actual 
@@ -418,14 +418,14 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
                 //cout << "nodosposi vertex numer es " << v[posi]->vertexNumber << endl;
                 //cout << "nodosposi vertex numer es " << idClient << endl;
                 //cout << "indexclient es  " << indexClient << endl;
-                cout << "es " << vector_clientes[3] << endl;
+                //cout << "es " << vector_clientes[3] << endl;
                 for (i = 0; i < vector_clientes.size(); i++){
                     if (vector_clientes[i] == idClient){
                         indexClient = i;
                         break;
                     }
                 }
-                cout << "valor de j es " << indexClient << endl;
+                //cout << "valor de j es " << indexClient << endl;
 
 
                 camiones[indexTruck]->clientes.push_back(idClient);   //agregar cliente
@@ -435,18 +435,18 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
                 camiones[indexTruck]->mat_dom = actualizar_dominante(camiones[indexTruck]->cargados, materiales); //colocar como dominante el mat del cliente
                 camiones[indexTruck]->capacidad = camiones[indexTruck]->capacidad - clientes[indexClient]->cantidad;
                 camiones[indexTruck]->nodo_actual = clientes[indexClient]->vertexNumber;
-                cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
+                //cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
                 camiones[indexTruck]->ruta = camiones[indexTruck]->ruta  +  std::to_string(clientes[indexClient]->vertexNumber) + " -> ";
                 camiones[indexTruck]->nodosVisitados.push_back(clientes[indexClient]->vertexNumber);
-                cout << "continua "<< endl;
+                //cout << "continua "<< endl;
 
                 cantidad_total = cantidad_total - clientes[indexClient]->cantidad;
-                cout << "cae aca " << endl;
+                //cout << "cae aca " << endl;
                 clientes[indexClient]->cantidad = 0;
                 z_distancias = z_distancias + distancias[posi];
-                cout << "aqui " << endl; 
+                //cout << "aqui " << endl; 
 
-                cout << "nodo actual " << indexClient << endl;
+                //cout << "nodo actual " << indexClient << endl;
                 
             }
         }
@@ -483,6 +483,20 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
 
     int intMaterial;
     int idClient;
+
+
+    /*cout << "ANTES DEL FE.: " << endl;
+    for (i = 0; i < t.size(); i++){
+        cout << "ID CAMION ES  " << t[i]->id << endl;
+        for (j = 0; j < t[i]->clientes.size(); j++){
+            cout << "Id Cliente " << t[0]->clientes[j] << endl;    
+        }
+        
+    }*/
+    
+    i= 0;
+    j = 0;
+
     //DEPOT AL PRIMER NODO
     for (i = 0; i < t.size(); i ++){
         if (t[i]->clientes.size() > 0){
@@ -501,21 +515,23 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
             z1 = z1 + pesosDistancias[indexClient];
             z2 = z2 + pesosRiesgos[indexClient];
 
-            cout << "distancia " << pesosDistancias[indexClient] << endl;
-            cout << "riesgos " << pesosRiesgos[indexClient] << endl;
+            //cout << "distancia " << pesosDistancias[indexClient] << endl;
+            //cout << "riesgos " << pesosRiesgos[indexClient] << endl;
         }
     }
     
 
     //ENTRE NODOS
     for (i = 0; i < t.size(); i++){
-        if (t[i]->clientes.size() > 0){ 
+        //cout << "error " << endl;
+        if (t[i]->clientes.size() > 0){  //si el camion tiene clientes
+            //cout << "error 2" << endl;
             auxClientesTruck = t[i]->clientes;
             auxCargados = t[i]->cargados;
             auxCargados.erase(auxCargados.begin());
-
-            while (auxCargados.size() >= 1){
-            //for (j = 0; j < t[i]->clientes.size()-1; j++){
+            //cout << "id camion " << i << endl; 
+            while (auxCargados.size() >= 1){    
+                
                 t[i]->mat_dom = actualizar_dominante(auxCargados, materiales);
                 intMaterial = letra_to_pos(t[i]->mat_dom, materiales);
                 /*vector<int> dist
@@ -524,9 +540,10 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
                 pesosRiesgos = dijkstraDist(v, s, path, intMaterial + 2); //el +2 es porque retorna numero del 0 al 5
     */
                 //t[i]->clientes contiene el ID de los clientes (vertexNumber)
+
                 idClientA = auxClientesTruck[j];
                 idClientB = auxClientesTruck[j+1];
-
+                
                 //cambiar dikstra por la pos del idclient a
 
                 std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClientA);
@@ -540,12 +557,14 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
 
                 z1 = z1 + pesosDistancias[indexClientB];
                 z2 = z2 + pesosRiesgos[indexClientB];
+
+
                 
                 auxClientesTruck.erase(auxClientesTruck.begin());
                 auxCargados.erase(auxCargados.begin());
                 //borrar el primero de auxclientes
-                cout << "distancias " << pesosDistancias[indexClientB] << endl;
-                cout << "riesgos " << pesosRiesgos[indexClientB] << endl;
+                //cout << "distancias " << pesosDistancias[indexClientB] << endl;
+                //cout << "riesgos " << pesosRiesgos[indexClientB] << endl;
             }
 
             //ULTIMO NODO A DEPOT
@@ -558,18 +577,25 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
                 vector<int> pesosDistancias = dijkstraDist(v, indexClientA, path, 1);
 
                 z1 = z1 + pesosDistancias[indexDepot]; 
-                cout << "distancias " << pesosDistancias[indexDepot] << endl;
+                //cout << "distancias " << pesosDistancias[indexDepot] << endl;
 
             }
         }
     }
 
-    
+    /*cout << "DESPUES DEL FE.: " << endl;
+    for (i = 0; i < t.size(); i++){
+        cout << "ID CAMION ES  " << t[i]->id << endl;
+        for (j = 0; j < t[i]->clientes.size(); j++){
+            cout << "Id Cliente " << t[0]->clientes[j] << endl;    
+        }
+        
+    }*/
 
     //z1 = z1 + z1;
     //z2 = z2 + z2;
-    cout << "z1 * alpha " << z1*alpha << endl;
-    cout << "z2 * alpha " << z2*(1-alpha) << endl;
+    //cout << "z1 * alpha " << z1*alpha << endl;
+    //cout << "z2 * alpha " << z2*(1-alpha) << endl;
 
     z = z1*alpha + z2*(1-alpha); 
 
@@ -580,26 +606,33 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
     return Z;
 }
 
-void mov2Opt(vector<Truck*> &camiones, int c1, int i, int k){
+vector <int> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, 
+                    float alpha, vector<string> materiales, int indexDepot, int c1, int i, int k){
 
     int j;
-    cout << "vector original " << endl;
-    cout << "size es " << camiones[c1]->clientes.size();
+    //cout << "vector original " << endl;
+    //cout << "size es " << camiones[c1]->clientes.size() << endl;
+    /*cout << "ANTES DEL MOVIMIENTO: " << endl;
     for (j = 0; j < camiones[c1]->clientes.size(); j++){
         cout << "Id Cliente " << camiones[c1]->clientes[j] << endl;
-    }
+    }*/
+    
+    vector <int> valorFuncEval;
 
-    cout << "Valor i " << i << endl;
-    cout << "Valor k " << k << endl;
-    cout << "cambiando " << endl;
+    
+    vector<Truck*> auxCamiones;
+    auxCamiones = camiones;
 
-    vector<int> ruta1(camiones[c1]->clientes.begin(), camiones[c1]->clientes.begin() + i-1);
-    vector<int> ruta2(camiones[c1]->clientes.begin() + i, camiones[c1]->clientes.begin() + k);
-    vector<int> ruta3(camiones[c1]->clientes.begin() + k, camiones[c1]->clientes.end());
+    vector<int> auxClientesTruck = camiones[c1]->clientes;
 
-    cout << "RUTAS " << endl;
 
-    cout << "RUTA 1 " << endl;
+
+    vector<int> ruta1(camiones[c1]->clientes.begin() , camiones[c1]->clientes.begin() + i);  //i = 3, k = 4  (0,1,2)
+    vector<int> ruta2(camiones[c1]->clientes.begin() + i, camiones[c1]->clientes.begin() + k);   // 3,4
+    vector<int> ruta3(camiones[c1]->clientes.begin() + k, camiones[c1]->clientes.end());  //5 
+
+    
+    /*cout << "RUTA 1 " << endl;
     for (j = 0; j < ruta1.size(); j++){
         cout << "Id cliente " << ruta1[j] << endl;
     }
@@ -607,25 +640,50 @@ void mov2Opt(vector<Truck*> &camiones, int c1, int i, int k){
     for (j = 0; j < ruta2.size(); j++){
         cout << "Id cliente " << ruta2[j] << endl;
     }
+
+    cout << "RUTA 3 " << endl;
     for (j = 0; j < ruta3.size(); j++){
         cout << "Id cliente " << ruta3[j] << endl;
     }
-    cout << "RUTA 3 " << endl;
+
     cout << "Antes del reverse " << endl;
     for (j = 0; j < ruta2.size(); j++){
         cout << "Id cliente " << ruta2[j] << endl;
-    }
+    }*/
 
     reverse(ruta2.begin(), ruta2.end());
 
-    cout << "Después del reverse " << endl;
+    /*cout << "Después del reverse " << endl;
     for (j = 0; j < ruta2.size(); j++){
         cout << "Id cliente " << ruta2[j] << endl;
-    }
+    }*/
     camiones[c1]->clientes.clear();
     camiones[c1]->clientes.insert( camiones[c1]->clientes.end(), ruta1.begin(), ruta1.end() );
     camiones[c1]->clientes.insert( camiones[c1]->clientes.end(), ruta2.begin(), ruta2.end() );
     camiones[c1]->clientes.insert( camiones[c1]->clientes.end(), ruta3.begin(), ruta3.end() );
+
+
+
+    /*cout << "DESPUES DEL MOVIMIENTO: " << endl;
+
+    for (j = 0; j < camiones[c1]->clientes.size(); j++){
+        cout << "Id Cliente " << camiones[c1]->clientes[j] << endl;
+    }*/
+
+    //auxCamiones[c1]->clientes = auxClientesTruck;
+
+    valorFuncEval = funcion_evaluacion(camiones, v, nodos, clientes, 
+                                alpha, materiales, indexDepot);
+
+    camiones[c1]->clientes.clear();
+
+    for (j= 0; j < auxClientesTruck.size(); j++){
+        cout << "id de cliente es " << auxClientesTruck[j] << endl;
+    }
+
+    camiones[c1]->clientes = auxClientesTruck;
+
+    return valorFuncEval;
 
     //camiones[c1]->clientes = ruta1+ruta
     /*for (j = 0; j < camiones.size(); j++){
@@ -644,26 +702,35 @@ void mov2Opt(vector<Truck*> &camiones, int c1, int i, int k){
 
 }
 
-int aplicar_movimiento(vector<Truck*> &camiones, vector<Cliente*> &clientes, int tipoMov, int c1, int c2, int pos1, int pos2){
+int aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, float alpha, 
+                                vector<string> materiales, int indexDepot, int tipoMov, int c1, int c2, int pos1, int pos2){
 
     //RECORDAR QUE ESTA FUNCION DEBE RECIBIR AUX
     int idClientA;
     int idClientB;
     int i;
+    int k;
+    int s_n;
+    vector <int> solS_n;
     //RECORDAR VER COMPATIBILIDAD DEL MOVIMIENTO
-    cout << "Antes del movimiento: " << endl << endl;
+    //cout << "Antes del movimiento: " << endl << endl;
 
-    cout << "Para camion: " << camiones[c1]->id << endl;
+    /*cout << "Para camion: " << camiones[c1]->id << endl;
     for (i = 0; i < camiones[c1]->clientes.size(); i++){    
         cout << "Cliente con Id: " << camiones[c1]->clientes[i] << endl;
-    }
+    }*/
     //cout << "Para camion: " << camiones[c2]->id << endl;
     //for (i = 0; i < camiones[c2]->clientes.size(); i++){    
     //    cout << "Cliente con Id: " << camiones[c2]->clientes[i] << endl;
     //}
-
+    int j;
     if (tipoMov == 0){ //MOVIMIENTO INSERT
 
+
+        //EN ESTE MOVIMIENTO FALTA NO MODIFICAR EL VECTOR CAMIONES, SE ESTA MODIFICANDO!
+        //SE PODRIA HACER LO MISMO QUE SE HACE CON MOV2OPT, CREAR UNA FUNCION QUE HAGA EL INSERT
+        //Y LUEGO VOLVER LOS VECTORES A LO QUE ERAN ANTES
+        //Y RETONAR EL VALOR DE LA FUNCION EVALUACION
         idClientB = camiones[c2]->clientes[pos2];
 
         auto itPos1 = camiones[c1]->clientes.begin() + pos1;
@@ -672,7 +739,7 @@ int aplicar_movimiento(vector<Truck*> &camiones, vector<Cliente*> &clientes, int
 
         //funcion_evaluacion(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, float alpha, 
           //                      vector<string> materiales, int indexDepot)
-        cout << "Despues del movimiento: " << endl << endl;
+        /*cout << "Despues del movimiento: " << endl << endl;
         cout << "Para camion: " << camiones[c1]->id << endl;
         for (i = 0; i < camiones[c1]->clientes.size(); i++){    
             cout << "Cliente con Id: " << camiones[c1]->clientes[i] << endl;
@@ -680,20 +747,55 @@ int aplicar_movimiento(vector<Truck*> &camiones, vector<Cliente*> &clientes, int
         cout << "Para camion: " << camiones[c2]->id << endl;
         for (i = 0; i < camiones[c2]->clientes.size(); i++){    
             cout << "Cliente con Id: " << camiones[c2]->clientes[i] << endl;
-        }
+        }*/
         return 0;
     }
+
 
     else if (tipoMov == 1){
 
        // idClientB = 
-        mov2Opt(camiones, c1, pos1, pos2);
+        float min = 99999999.0;
 
-        cout << "Despues del movimiento: " << endl << endl;
+        for (i = 0; i < camiones[c1]->clientes.size(); i++){
+            for (k = i+1; k < camiones[c1]->clientes.size(); k++){
+
+                //cout << "valor i " << i << endl;
+                //cout << "valor k " << k << endl;
+
+                /*cout << "ANTES DEL MOVIMIENTO: " << endl;
+                for (j = 0; j < camiones[c1]->clientes.size(); j++){
+                    cout << "Id Cliente " << camiones[c1]->clientes[j] << endl;
+                }*/
+
+                solS_n = mov2Opt(camiones, v, nodos, clientes, 
+                                    alpha, materiales, indexDepot, c1, i, k);
+
+                //cout << "valor de la solucion es " << solS_n[0] << endl;
+
+                /*cout << "DESPUES DEL MOVIMIENTO: " << endl;
+
+                for (j = 0; j < camiones[c1]->clientes.size(); j++){
+                    cout << "Id Cliente " << camiones[c1]->clientes[j] << endl;
+                }*/
+
+                if (solS_n[0] < min){
+                    min = s_n;
+                    pos1 = i;
+                    pos2 = k;
+                }
+                
+            } 
+        }
+
+
+
+
+        /*cout << "Despues del movimiento: " << endl << endl;
         cout << "Para camion: " << camiones[c1]->id << endl;
         for (i = 0; i < camiones[c1]->clientes.size(); i++){    
             cout << "Cliente con Id: " << camiones[c1]->clientes[i] << endl;
-        }
+        }*/
 
         return 0;
     }
@@ -1113,6 +1215,10 @@ int main(int argc, char** argv)
 
     float alpha = 0.5;
 
+    //v: vector clase de nodos
+    //nodos: vector entero con id nodos
+
+
     solucionGreedy(camiones, clientes, vector_clientes, v,
                         nodos, materiales, indexDepot, cantidad_total);
 
@@ -1167,10 +1273,21 @@ int main(int argc, char** argv)
 
     int c1, c2, pos1, pos2;
 
+    int sBest = solucionGral[0];
+    int sBestCandidate = sBest;
+
+
+    //LISTA TABU <(CAM1, CAM2, CLIENTE1, CLIENTE2)>
+
+    //INSERT <(CAM1, CAM2, CLIENTE1, CLIENTE2)>
+    //2-OPT  <(CAM1, -1,   CLIENTE2, CLIENTE2)>
     while (its < max_its){
 
         prob = float_rand(0,1);
-        cout << "prob es " << prob << endl;
+        //cout << "prob es " << prob << endl;
+        //vecindario de la mejor solucion
+        //cout << "valor its " << its << endl;
+
         if (prob < 0.5){
             c1 = float_rand(0, camiones.size());
             c2 = float_rand(0, camiones.size());
@@ -1189,27 +1306,49 @@ int main(int argc, char** argv)
                 cout << "c2 es " << c2 << endl;
                 cout << "pos1 es " << pos1 << endl;
                 cout << "pos2 es " << pos2 << endl;
-                //aplicar_movimiento(aux_camiones, aux_clientes, tipoMov, c1, c2, pos1, pos2);*/
+                */
+                cout << "ANTES DEL MOV " << endl;
+                for (i = 0; i < aux_camiones[c1]->clientes.size(); i++){
+                    cout << "id cliente " << aux_camiones[c1]->clientes[i] << endl;
+                }    
+                aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, 
+                                materiales, indexDepot, tipoMov, c1, c2, pos1, pos2);
+                //continue;
+                cout << "DESPUES DEL MOV " << endl;
+                for (i = 0; i < aux_camiones[c1]->clientes.size(); i++){
+                    cout << "id cliente " << aux_camiones[c1]->clientes[i] << endl;
+                }    
             }
         }
         else{ //2-opt
             c1 = float_rand(0, camiones.size());
             c2 = -1;
-            pos1 = float_rand(0, camiones[c1]->clientes.size() );
-            pos2 = float_rand(pos1, camiones[c1]->clientes.size() );
+            //pos1 = float_rand(0, camiones[c1]->clientes.size() );
+            //pos2 = float_rand(pos1, camiones[c1]->clientes.size() );
 
-            if (pos1 < pos2 and pos1 - 1 > 0 and pos2 + 1 < camiones[c1]->clientes.size()){
-                tipoMov = 1;
-                cout << "Valores del movimiento 2-OPT" << endl;
-                cout << "size de clientes del camion " << camiones[c1]->clientes.size() << endl;
-                cout << "c1 es " << c1 << endl;
-                cout << "c2 es " << c2 << endl;
-                cout << "pos1 es " << pos1 << endl;
-                cout << "pos2 es " << pos2 << endl;
-                aplicar_movimiento(aux_camiones, aux_clientes, tipoMov, c1, c2, pos1, pos2);
-            }
+            //if (pos1 < pos2 and pos1 - 1 > 0 and pos2 + 1 < camiones[c1]->clientes.size()){
+
+            tipoMov = 1;
+            //cout << "Valores del movimiento 2-OPT" << endl;
+            //cout << "size de clientes del camion " << camiones[c1]->clientes.size() << endl;
+            //cout << "c1 es " << c1 << endl;
+            //cout << "c2 es " << c2 << endl;
+            //cout << "pos1 es " << pos1 << endl;
+            //cout << "pos2 es " << pos2 << endl;
+            //aplicar_movimiento(aux_camiones, aux_clientes, tipoMov, c1, -1, -1, -1);
+            //aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, 
+              //                  materiales, indexDepot, tipoMov, c1, -1, -1, -1);
+            //}
 
         }
+
+        //vector<int> sBestCandidateVector;
+        //sBestCandidateVector = funcion_evaluacion(aux_camiones, v, nodos, aux_clientes, alpha, 
+                                //materiales, indexDepot);
+
+        //cout << "sbestcandidatevector " << sBestCandidateVector[0] << endl;
+
+        
 
         /*for (i = 0; i < camiones.size(); i++){
             for (k = 0; k < camiones.size(); k++){
