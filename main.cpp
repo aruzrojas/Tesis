@@ -209,6 +209,29 @@ int compatible_todos(vector<string> cargados, string & r, vector<string> materia
     return 1;
 }
 
+int vector_compatible(vector<string> cargados, vector<string> materiales){
+    vector<vector<char>> COM{ {'A', '-', 'C', 'D', '-' }, 
+                        {'-', 'B', 'C', 'D', 'E' }, 
+                        {'C', 'C', 'C', '-', 'E' },
+                        {'D', 'D', '-', 'D', 'E' },
+                        {'-', 'E', 'E', 'E', 'E' }};
+
+    int i, j;
+    int pos_i;
+    int pos_j;
+    char guion = '-';
+    for (i = 0; i < cargados.size()-1; i++){
+        for (j = i; j < cargados.size(); j++){
+            pos_i = letra_to_pos(cargados[i], materiales);
+            pos_j = letra_to_pos(cargados[j], materiales);
+            if (COM[pos_i][pos_j] == guion){
+                return 0;
+            }
+        }
+    }                    
+    return 1;   
+}
+
 char actualizar_dominante(vector<string> cargados, vector<string> materiales){
    vector<vector<char>> COM{ {'A', '-', 'C', 'D', '-' }, 
                     {'-', 'B', 'C', 'D', 'E' }, 
@@ -608,36 +631,54 @@ vector <int> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> n
 vector <int> movInsert(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, 
                     float alpha, vector<string> materiales, int indexDepot, int c1, int c2, int pos1, int pos2){
 
-    cout << "MOVIMIENTO INSERT" << endl;
-
+    //cout << "MOVIMIENTO INSERT" << endl;
+    vector <int> sol_error {-1, -1, -1};
     vector <int> valorFuncEval;
 
-    vector<Truck*> auxCamiones1;
-    vector<Truck*> auxCamiones2;
-
     vector<int> auxClientesTruck1 = camiones[c1]->clientes;
-    vector<int> auxClientesTruck2 = camiones[c1]->clientes;
+    vector<int> auxClientesTruck2 = camiones[c2]->clientes;
+
+    vector<string> auxCargadosTruck1 = camiones[c1]->cargados;
+    vector<string> auxCargadosTruck2 = camiones[c2]->cargados;
 
     int idClientB;
+    string matClientB;
 
     idClientB = camiones[c2]->clientes[pos2];
+    matClientB = camiones[c2]->cargados[pos2];
 
-    auto itPos1 = camiones[c1]->clientes.begin() + pos1;
-    camiones[c1]->clientes.insert(itPos1,idClientB);
+    auto itClientPos1 = camiones[c1]->clientes.begin() + pos1;
+    auto itMatPos1 = camiones[c1]->cargados.begin() + pos1;
+
+    camiones[c1]->clientes.insert(itClientPos1,idClientB);
     camiones[c2]->clientes.erase(camiones[c2]->clientes.begin() + pos2);
+
+    camiones[c1]->cargados.insert(itMatPos1,matClientB);
+    camiones[c2]->cargados.erase(camiones[c2]->cargados.begin() + pos2);
 
     //cout << "size camiones c1 " << camiones[c1]->clientes.size() << endl;
     //cout << "size camiones c2 " << camiones[c2]->clientes.size() << endl;
     //cout << "antes func ev"  << endl;
-    valorFuncEval = funcion_evaluacion(camiones, v, nodos, clientes, 
-                                alpha, materiales, indexDepot);
+
+    if (vector_compatible(camiones[c1]->cargados, materiales)){
+        valorFuncEval = funcion_evaluacion(camiones, v, nodos, clientes, 
+                                alpha, materiales, indexDepot);    
+    }
+    else{
+        valorFuncEval = sol_error;
+    }
+    
     //cout << "despues func ev"  << endl;
 
     camiones[c1]->clientes.clear();
     camiones[c2]->clientes.clear();
+    camiones[c1]->cargados.clear();
+    camiones[c2]->cargados.clear();
 
     camiones[c1]->clientes = auxClientesTruck1;
     camiones[c2]->clientes = auxClientesTruck2;
+    camiones[c1]->cargados = auxCargadosTruck1;
+    camiones[c2]->cargados = auxCargadosTruck2;
 
     return valorFuncEval;
 }
@@ -645,26 +686,33 @@ vector <int> movInsert(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
 vector <int> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, 
                     float alpha, vector<string> materiales, int indexDepot, int c1, int i, int k){
 
-    cout << "MOVIMIENTO 2-OPT" << endl;
+    //cout << "MOVIMIENTO 2-OPT" << endl;
+
+    vector <int> sol_error {-1, -1, -1};
+    vector <string> cargados;
 
     int j;
     //cout << "vector original " << endl;
     //cout << "size es " << camiones[c1]->clientes.size() << endl;
     /*cout << "ANTES DEL MOVIMIENTO: " << endl;
-    for (j = 0; j < camiones[c1]->clientes.size(); j++){
-        cout << "Id Cliente " << camiones[c1]->clientes[j] << endl;
+    for (j = 0; j < camiones[c1]->cargados.size(); j++){
+        cout << "Id Cliente " << camiones[c1]->cargados[j] << endl;
     }*/
     vector <int> valorFuncEval;
 
     vector<int> auxClientesTruck = camiones[c1]->clientes;
-
-
+    vector<string> auxCargadosTruck = camiones[c1]->cargados;
 
     vector<int> ruta1(camiones[c1]->clientes.begin() , camiones[c1]->clientes.begin() + i);  //i = 3, k = 4  (0,1,2)
     vector<int> ruta2(camiones[c1]->clientes.begin() + i, camiones[c1]->clientes.begin() + k);   // 3,4
     vector<int> ruta3(camiones[c1]->clientes.begin() + k, camiones[c1]->clientes.end());  //5 
 
+
+    vector<string> cargados1(camiones[c1]->cargados.begin() , camiones[c1]->cargados.begin() + i);  //i = 3, k = 4  (0,1,2)
+    vector<string> cargados2(camiones[c1]->cargados.begin() + i, camiones[c1]->cargados.begin() + k);   // 3,4
+    vector<string> cargados3(camiones[c1]->cargados.begin() + k, camiones[c1]->cargados.end());  //5
     
+    //cout << "carga variables" << endl;
     /*cout << "RUTA 1 " << endl;
     for (j = 0; j < ruta1.size(); j++){
         cout << "Id cliente " << ruta1[j] << endl;
@@ -685,6 +733,7 @@ vector <int> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos
     }*/
 
     reverse(ruta2.begin(), ruta2.end());
+    reverse(cargados2.begin(), cargados2.end());
 
     /*cout << "Después del reverse " << endl;
     for (j = 0; j < ruta2.size(); j++){
@@ -695,6 +744,13 @@ vector <int> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos
     camiones[c1]->clientes.insert( camiones[c1]->clientes.end(), ruta2.begin(), ruta2.end() );
     camiones[c1]->clientes.insert( camiones[c1]->clientes.end(), ruta3.begin(), ruta3.end() );
 
+    //cout << "entre medio " << endl;
+
+    camiones[c1]->cargados.clear();
+    camiones[c1]->cargados.insert( camiones[c1]->cargados.end(), cargados1.begin(), cargados1.end() );
+    camiones[c1]->cargados.insert( camiones[c1]->cargados.end(), cargados2.begin(), cargados2.end() );
+    camiones[c1]->cargados.insert( camiones[c1]->cargados.end(), cargados3.begin(), cargados3.end() );  
+
 
 
     /*cout << "DESPUES DEL MOVIMIENTO: " << endl;
@@ -704,17 +760,32 @@ vector <int> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos
     }*/
 
     //auxCamiones[c1]->clientes = auxClientesTruck;
+    //cout << "antes del if " << endl;
+    if (vector_compatible(camiones[c1]->cargados, materiales)){
+        valorFuncEval = funcion_evaluacion(camiones, v, nodos, clientes, 
+                                alpha, materiales, indexDepot);    
+    }
+    else{
+        valorFuncEval = sol_error;
+        cout << "retorna sol error " << endl;
+    }
 
-    valorFuncEval = funcion_evaluacion(camiones, v, nodos, clientes, 
-                                alpha, materiales, indexDepot);
+    /*cout << "despues del mov" << endl;
+    for (j = 0; j < camiones[c1]->cargados.size(); j++){
+        cout << "Id Cliente" << camiones[c1]->cargados[j] << endl;
+    }*/
 
     camiones[c1]->clientes.clear();
+    camiones[c1]->cargados.clear();
 
     /*for (j= 0; j < auxClientesTruck.size(); j++){
         cout << "id de cliente es " << auxClientesTruck[j] << endl;
     }*/
 
     camiones[c1]->clientes = auxClientesTruck;
+    camiones[c1]->cargados = auxCargadosTruck;
+
+
 
     return valorFuncEval;
 
@@ -728,14 +799,14 @@ vector <int> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos
     }
     for (j = 0; j < camiones.size(); j++){
         cout << "Id Cliente" << camiones[c1]->clientes[j] << endl;
-    }*/
+    }
     //ruta1 = (camiones[c1]->clientes);
-
+    */
 
 
 }
 
-int aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, float alpha, 
+vector <int> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, float alpha, 
                                 vector<string> materiales, int indexDepot, int tipoMov, int c1, int c2, int pos1, int pos2){
 
     //RECORDAR QUE ESTA FUNCION DEBE RECIBIR AUX
@@ -745,6 +816,8 @@ int aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
     int k;
     int s_n;
     vector <int> solS_n;
+    vector <int> sol_return;
+    vector <int> sol_error {-1, -1, -1};
     //RECORDAR VER COMPATIBILIDAD DEL MOVIMIENTO
     //cout << "Antes del movimiento: " << endl << endl;
 
@@ -758,7 +831,6 @@ int aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
     //}
     int j;
     if (tipoMov == 0){ //MOVIMIENTO INSERT
-
 
         //EN ESTE MOVIMIENTO FALTA NO MODIFICAR EL VECTOR CAMIONES, SE ESTA MODIFICANDO!
         //SE PODRIA HACER LO MISMO QUE SE HACE CON MOV2OPT, CREAR UNA FUNCION QUE HAGA EL INSERT
@@ -787,18 +859,23 @@ int aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
             cout << "Cliente con Id: " << camiones[c2]->clientes[i] << endl;
         }*/
 
-        cout << "valor de la solucion es " << solS_n[0] << endl;
+        cout << "valor de la solucion es " << solS_n[0] << endl;    
+
+        if (solS_n != sol_error){
+            return solS_n;    
+        }
+        else{
+            return sol_error;
+        }
 
         
-
-        return 0;
     }
 
 
     else if (tipoMov == 1){
 
        // idClientB = 
-        float min = 99999999.0;
+        int min = 99999999.0;
 
         for (i = 0; i < camiones[c1]->clientes.size(); i++){
             for (k = i+1; k < camiones[c1]->clientes.size(); k++){
@@ -826,6 +903,7 @@ int aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
                     min = solS_n[0];
                     pos1 = i;
                     pos2 = k;
+                    sol_return = solS_n;
                 }
                 
             } 
@@ -838,12 +916,11 @@ int aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
             cout << "Cliente con Id: " << camiones[c1]->clientes[i] << endl;
         }*/
 
-        return 0;
+        return sol_return;
     }
 
     else{
-
-        return -1;
+        return sol_error;
     }
 
 
@@ -865,6 +942,16 @@ int aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
     }*/
 }
 
+
+int solucion_dominante(vector<int> sol_arc, vector<int> sCandidate){
+
+    if (sCandidate[1] <= sol_arc[0] && sCandidate[2] <= sol_arc[1]){
+        if (sCandidate[1] <= sol_arc[0] || sCandidate[2] <= sol_arc[1]){
+            return 1;
+        }
+    }
+    return 0;
+}
 
 int main(int argc, char** argv)
 {
@@ -1317,6 +1404,18 @@ int main(int argc, char** argv)
     int sBest = solucionGral[0];
     int sBestCandidate = sBest;
 
+    vector<int> sCandidate;
+    int sCandidateR;
+    int sCandidateD;
+
+    string arc_solucion = "resultados " + fileToTest + ".txt";
+    std::ofstream outfile;
+
+    ifstream myfile_read_arc_solucion;
+
+    vector <int> sol_arc;
+
+    int sol_accept;
 
     //LISTA TABU <(CAM1, CAM2, CLIENTE1, CLIENTE2)>
 
@@ -1340,7 +1439,8 @@ int main(int argc, char** argv)
             //Truck *aux_camion1 = new Truck(camiones[c1]->id, camiones[c1]->capacidad);
             //Truck *aux_camion2 = new Truck(camiones[c2]->id, camiones[c2]->capacidad);
 
-            if (c1 != c2){
+            if (c1 != c2){ //camiones pueden ser iguales y posiciones distintas
+                
             /*    cout << "Valores del movimiento INSERT" << endl;
                 cout << "size de clientes del camion " << camiones[c1]->clientes.size() << endl;
                 cout << "c1 es " << c1 << endl;
@@ -1352,7 +1452,7 @@ int main(int argc, char** argv)
                 for (i = 0; i < aux_camiones[c1]->clientes.size(); i++){
                     cout << "id cliente " << aux_camiones[c1]->clientes[i] << endl;
                 }   */ 
-                aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, 
+                sCandidate = aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, 
                                 materiales, indexDepot, tipoMov, c1, c2, pos1, pos2);
                 //continue;
                 /*cout << "DESPUES DEL MOV " << endl;
@@ -1377,11 +1477,73 @@ int main(int argc, char** argv)
             //cout << "pos1 es " << pos1 << endl;
             //cout << "pos2 es " << pos2 << endl;
             //aplicar_movimiento(aux_camiones, aux_clientes, tipoMov, c1, -1, -1, -1);
-            aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, 
+
+            sCandidate = aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, 
                                 materiales, indexDepot, tipoMov, c1, -1, -1, -1);
             //}
 
         }
+
+        sCandidateD = sCandidate[1];
+        sCandidateR = sCandidate[2];
+        cout << "s candidate es " << sCandidate[0] << endl;
+        cout << "s[1] es " << sCandidate[1] << endl;
+        cout << "s[2] es " << sCandidate[2] << endl;
+        sol_accept = 0;
+
+        if (sCandidate[0] != -1){
+            if (std::ifstream(arc_solucion)){
+                outfile.open(arc_solucion, std::ios_base::app); // append instead of overwrite
+                outfile << sCandidate[1] << " " << sCandidate[2] << endl;
+                cout << "existe " << endl;
+                outfile.close();
+
+                
+                string read_arc_solucion = arc_solucion;
+                myfile_read_arc_solucion.open(read_arc_solucion);
+                std::vector<std::string> out;
+
+                while(getline(myfile_read_arc_solucion,line)){
+                    cout << "dentro while " << endl;
+                    tokenize(line, ' ', out);
+                    for (auto &line: out) {
+                       sol_arc.push_back(std::stoi(line));
+                    }
+                    cout << "dps de for " << endl;
+                    if (solucion_dominante(sol_arc, sCandidate)){
+                        cout << " antes de line replace " << endl;
+                        //string string_sCandidate = sCandidate[1] + " " + sCandidate[2];
+                        string deleteline;
+                        cout << "antes del replace " << endl;
+                        deleteline.replace(deleteline.find(line),line.length(),"");
+                        //outfile << sCandidate[1] << " " << sCandidate[2] << endl;
+                        cout << "dps del replace " << endl;
+                        //outfile << string_sCandidate << endl;
+                        outfile << deleteline << endl;
+                        cout << "antes del sol accept " << endl;
+                        sol_accept = 1;
+                    
+                    }
+                    else if(!solucion_dominante(sol_arc, sCandidate)){
+                        sol_accept = 1;
+                        continue;
+                    }
+                }
+                if (sol_accept = 0){
+                    outfile << sCandidate[1] << " " << sCandidate[2] << endl;
+                }
+                myfile_read_arc_solucion.close();
+
+
+
+            }
+            else{
+                std::ofstream archivo_solucion(arc_solucion);
+                cout << "no existe " << endl;
+            }    
+        }
+
+        
 
         //vector<int> sBestCandidateVector;
         //sBestCandidateVector = funcion_evaluacion(aux_camiones, v, nodos, aux_clientes, alpha, 
