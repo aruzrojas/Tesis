@@ -859,7 +859,7 @@ vector <int> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector
             cout << "Cliente con Id: " << camiones[c2]->clientes[i] << endl;
         }*/
 
-        cout << "valor de la solucion es " << solS_n[0] << endl;    
+        //cout << "valor de la solucion es " << solS_n[0] << endl;    
 
         if (solS_n != sol_error){
             return solS_n;    
@@ -891,7 +891,7 @@ vector <int> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector
                 solS_n = mov2Opt(camiones, v, nodos, clientes, 
                                     alpha, materiales, indexDepot, c1, i, k);
 
-                cout << "valor de la solucion es " << solS_n[0] << endl;
+                //cout << "valor de la solucion es " << solS_n[0] << endl;
 
                 /*cout << "DESPUES DEL MOVIMIENTO: " << endl;
 
@@ -909,7 +909,7 @@ vector <int> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector
             } 
         }
 
-        cout << "minimo es " << min << endl;
+        //cout << "minimo es " << min << endl;
         /*cout << "Despues del movimiento: " << endl << endl;
         cout << "Para camion: " << camiones[c1]->id << endl;
         for (i = 0; i < camiones[c1]->clientes.size(); i++){    
@@ -944,6 +944,14 @@ vector <int> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector
 
 
 int solucion_dominante(vector<int> sol_arc, vector<int> sCandidate){
+
+    cout << "valor scandidate " << endl;
+    cout << "valor [1] es " << sCandidate[1] << endl;
+    cout << "valor [2] es " << sCandidate[2] << endl;
+
+    cout << "valor sol_arc " << endl;
+    cout << "valor [0] es " << sol_arc[0] << endl;
+    cout << "valor [1] es " << sol_arc[1] << endl;
 
     if (sCandidate[1] <= sol_arc[0] && sCandidate[2] <= sol_arc[1]){
         if (sCandidate[1] <= sol_arc[0] || sCandidate[2] <= sol_arc[1]){
@@ -1216,7 +1224,7 @@ int main(int argc, char** argv)
 
     //PARA EL PRIMER NODO
     ifstream myfile;
-    string fileToTest= "peligro-mezcla4-min-riesgo-zona7-2k-AE.3.hazmat";
+    string fileToTest= "peligro-mezcla4-min-riesgo-zona1-2k-AE.3.hazmat";
     myfile.open(fileToTest);
 
     vector<int> clientesFile;
@@ -1408,12 +1416,13 @@ int main(int argc, char** argv)
     int sCandidateR;
     int sCandidateD;
 
-    string arc_solucion = "resultados " + fileToTest + ".txt";
-    std::ofstream outfile;
+    //string arc_solucion = "resultados " + fileToTest + ".txt";
+    //std::ofstream outfile;
+    //ifstream myfile_read_arc_solucion;
 
-    ifstream myfile_read_arc_solucion;
-
-    vector <int> sol_arc;
+    vector<vector<int>> sols_arc;
+    vector <int> sol_arc {solucionGral[1], solucionGral[2]};
+    sols_arc.push_back(sol_arc);
 
     int sol_accept;
 
@@ -1492,55 +1501,38 @@ int main(int argc, char** argv)
         sol_accept = 0;
 
         if (sCandidate[0] != -1){
-            if (std::ifstream(arc_solucion)){
-                outfile.open(arc_solucion, std::ios_base::app); // append instead of overwrite
-                outfile << sCandidate[1] << " " << sCandidate[2] << endl;
-                cout << "existe " << endl;
-                outfile.close();
 
-                
-                string read_arc_solucion = arc_solucion;
-                myfile_read_arc_solucion.open(read_arc_solucion);
-                std::vector<std::string> out;
+            for (i = 0; i < sols_arc.size(); i++){
+                cout << "dentro if " << endl;
+                cout << "size es " << sols_arc[i].size() << endl;
+                //sols_arc.push_back(sCandidate);
+                //cout << "dps de for " << endl;
+                if (solucion_dominante(sols_arc[i], sCandidate)){
+                    cout << "antes del reemplazo " << endl;
+                    cout << "valor 1  es " << sols_arc[i][0] << endl; 
+                    cout << "valor 2  es " << sols_arc[i][1] << endl;
+                    vector <int> s_replace {sCandidate[1], sCandidate[2]};
 
-                while(getline(myfile_read_arc_solucion,line)){
-                    cout << "dentro while " << endl;
-                    tokenize(line, ' ', out);
-                    for (auto &line: out) {
-                       sol_arc.push_back(std::stoi(line));
-                    }
-                    cout << "dps de for " << endl;
-                    if (solucion_dominante(sol_arc, sCandidate)){
-                        cout << " antes de line replace " << endl;
-                        //string string_sCandidate = sCandidate[1] + " " + sCandidate[2];
-                        string deleteline;
-                        cout << "antes del replace " << endl;
-                        deleteline.replace(deleteline.find(line),line.length(),"");
-                        //outfile << sCandidate[1] << " " << sCandidate[2] << endl;
-                        cout << "dps del replace " << endl;
-                        //outfile << string_sCandidate << endl;
-                        outfile << deleteline << endl;
-                        cout << "antes del sol accept " << endl;
-                        sol_accept = 1;
+                    std::replace (sols_arc.begin(), sols_arc.end(), sols_arc[i], s_replace);
                     
-                    }
-                    else if(!solucion_dominante(sol_arc, sCandidate)){
-                        sol_accept = 1;
-                        continue;
-                    }
+                    cout << "dps del reemplazo " << endl; 
+                    cout << "valor 1  es " << sols_arc[i][0] << endl; 
+                    cout << "valor 2  es " << sols_arc[i][1] << endl;
+
+                    sol_accept = 1;
+                
                 }
-                if (sol_accept = 0){
-                    outfile << sCandidate[1] << " " << sCandidate[2] << endl;
+                else if(!solucion_dominante(sols_arc[i], sCandidate)){
+                    sol_accept = 1;
+                    cout << "no es dom  " << endl;
+                    continue;
                 }
-                myfile_read_arc_solucion.close();
-
-
-
             }
-            else{
-                std::ofstream archivo_solucion(arc_solucion);
-                cout << "no existe " << endl;
-            }    
+            if (sol_accept = 0){
+                //outfile << sCandidate[1] << " " << sCandidate[2] << endl;
+                sols_arc.push_back(sCandidate);
+            }
+            //myfile_read_arc_solucion.close();
         }
 
         
