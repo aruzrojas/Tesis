@@ -1061,138 +1061,138 @@ int solucion_dominante(vector<float> sol_arc, vector<float> sCandidate){
 
 int main(int argc, char** argv)
 {
-	ifstream in("hazmat.txt");
+    ifstream in("hazmat.txt");
 
-	if(!in) {
-		cout << "No se puede abrir el archivo.\n";
-		return 1;
-	}
+    if(!in) {
+        cout << "No se puede abrir el archivo.\n";
+        return 1;
+    }
 
-  	vector<int> id_arco;
-  	vector<int> nodosA;
-  	vector<int> nodosB;
-  	vector<string> arcos;
-	vector<float> longitud;
-	vector<float> R1;
-	vector<float> R2;
-	vector<float> R3;
-	vector<float> R4;
-	vector<float> R5;
+    vector<int> id_arco;
+    vector<int> nodosA;
+    vector<int> nodosB;
+    vector<string> arcos;
+    vector<float> longitud;
+    vector<float> R1;
+    vector<float> R2;
+    vector<float> R3;
+    vector<float> R4;
+    vector<float> R5;
 
-	vector <int> nodos;
+    vector <int> nodos;
 
-	char str[255];
-	int i = 0;
+    char str[255];
+    int i = 0;
 
-	vector<Node*> v;
+    vector<Node*> v;
     vector<Truck*> t;
-	
+    
     //Lectura archivo grande
-	while(in) {
-		in.getline(str, 255); 
-		if(in){
-			
+    while(in) {
+        in.getline(str, 255); 
+        if(in){
+            
 
             std::vector<std::string> out;
             tokenize(str,'\t', out);
             
-			for (auto &line: out) {			
+            for (auto &line: out) {         
 
-				if (i == 0){ //ID ARCO
-					id_arco.push_back(std::stoi(line));
-					i++;
-				}
-				else if (i == 1){ //ID DEL NODO DESTINO
-					nodosA.push_back(std::stoi(line));
-					i++;
-				}
-				else if (i == 2){ //ID DEL NODO ORIGEN
-					nodosB.push_back(std::stoi(line));
-					i++;
-				}
-				else if (i == 3){
-					arcos.push_back(line);
-					i++;
-				}
-				else if (i == 4){
-					longitud.push_back(std::stof(line));
-					i++;
-				}
-				else if (i == 5){
-					line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-					R1.push_back(std::stof(line));
-					i++;
-				}
-				else if (i == 6){
-					line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-					R2.push_back(std::stof(line));
-					i++;
-				}
-				else if (i == 7){
-					line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-					R3.push_back(std::stof(line));
-					i++;
-				}
-				else if (i == 8){
-					line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-					R4.push_back(std::stof(line));
-					i++;
-				}
-				else if (i == 9){
-					line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-					R5.push_back(std::stof(line));
-					i = 0;
-				}
-			}
-		} 
-	}
-	in.close();
+                if (i == 0){ //ID ARCO
+                    id_arco.push_back(std::stoi(line));
+                    i++;
+                }
+                else if (i == 1){ //ID DEL NODO DESTINO
+                    nodosA.push_back(std::stoi(line));
+                    i++;
+                }
+                else if (i == 2){ //ID DEL NODO ORIGEN
+                    nodosB.push_back(std::stoi(line));
+                    i++;
+                }
+                else if (i == 3){
+                    arcos.push_back(line);
+                    i++;
+                }
+                else if (i == 4){
+                    longitud.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 5){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R1.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 6){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R2.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 7){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R3.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 8){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R4.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 9){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R5.push_back(std::stof(line));
+                    i = 0;
+                }
+            }
+        } 
+    }
+    in.close();
 
     //LECTURA DE NODOS
-	ifstream in2("nodes.txt");
+    ifstream in2("nodes.txt");
 
-	if(!in2) {
-		cout << "No se puede abrir el archivo.\n";
-		return 1;
-	}
-	int j = 0;
-	while(in2) {
-		in2.getline(str, 255); 
-		if(in2){
-			//cout << "str " << str << endl;		
+    if(!in2) {
+        cout << "No se puede abrir el archivo.\n";
+        return 1;
+    }
+    int j = 0;
+    while(in2) {
+        in2.getline(str, 255); 
+        if(in2){
+            //cout << "str " << str << endl;        
             std::vector<std::string> out;
             tokenize(str,'\t', out);
             for (auto &line: out) {
-				line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
-				nodos.push_back(std::stoi(line));
-				Node *a = new Node(std::stoi(line));
-				v.push_back(a);
-				//cout << "Número es: " << line << endl;
-			}
-		}
-	} 
-	
-	in2.close();
+                line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
+                nodos.push_back(std::stoi(line));
+                Node *a = new Node(std::stoi(line));
+                v.push_back(a);
+                //cout << "Número es: " << line << endl;
+            }
+        }
+    } 
+    
+    in2.close();
 
     /*FIN LECTURA DE NODOS*/
 
-	//Agregar vecinos a cada nodo
-	for (i = 0; i < nodosB.size(); i++){
+    //Agregar vecinos a cada nodo
+    for (i = 0; i < nodosB.size(); i++){
 
-		int vertexNumberA = nodosA[i];
-		int vertexNumberB = nodosB[i];
+        int vertexNumberA = nodosA[i];
+        int vertexNumberB = nodosB[i];
 
-		std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), vertexNumberA);
-		std::vector<int>::iterator itB = std::find(nodos.begin(), nodos.end(), vertexNumberB);
+        std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), vertexNumberA);
+        std::vector<int>::iterator itB = std::find(nodos.begin(), nodos.end(), vertexNumberB);
 
-		int indexA = std::distance(nodos.begin(), itA);
-		int indexB = std::distance(nodos.begin(), itB);
-		
-		v[indexA]->add_child(indexB,longitud[i], R1[i], R2[i], R3[i], R4[i], R5[i]);
+        int indexA = std::distance(nodos.begin(), itA);
+        int indexB = std::distance(nodos.begin(), itB);
+        
+        v[indexA]->add_child(indexB,longitud[i], R1[i], R2[i], R3[i], R4[i], R5[i]);
 
-	}
+    }
 
-	int s = 1894; //Posicion del nodo, al cual se le quiere buscar caminos más cortos
+    int s = 1894; //Posicion del nodo, al cual se le quiere buscar caminos más cortos
     vector<int> path(v.size());
 
     /*vector<int> dist
@@ -1213,21 +1213,21 @@ int main(int argc, char** argv)
              << dist[i] << endl;
     }*/
     //for para revisar vecinos del nodo en la posicion s
-	/*for (int i = 0; i < dist.size(); i++) {
-	    if (dist[i] == infi) {
-	        cout << nodos[i] << " and " << 
-	        nodos[s]
-	             << " are not connected" << " " << i << " a " << s 
-	             << endl;
-	        continue;
-	    }
-	    cout << "Distance of " << nodos[i]
-	         << "th vertex from source vertex "
-	         << nodos[s] << " is: "
-	         << dist[i] << endl;
-	}*/
+    /*for (int i = 0; i < dist.size(); i++) {
+        if (dist[i] == infi) {
+            cout << nodos[i] << " and " << 
+            nodos[s]
+                 << " are not connected" << " " << i << " a " << s 
+                 << endl;
+            continue;
+        }
+        cout << "Distance of " << nodos[i]
+             << "th vertex from source vertex "
+             << nodos[s] << " is: "
+             << dist[i] << endl;
+    }*/
 
-	//----FIN LECTURA EXCEL------
+    //----FIN LECTURA EXCEL------
 
     //----LEER ARCHIVOS TXT------
 
@@ -1764,14 +1764,14 @@ int main(int argc, char** argv)
     //vector<int> dist = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5 ... Vector de caminos mas cortos desde 's' a los demás
     //dist = arreglo de distancias de un nodo para todos    
 
-	/*Capture_Params(argc,argv);
-	srand48(seed);
+    /*Capture_Params(argc,argv);
+    srand48(seed);
 
-	cout << float_rand(0,1) << endl;
+    cout << float_rand(0,1) << endl;
 
-	//LEER HAZMAT POR ZONA
+    //LEER HAZMAT POR ZONA
 
-	
+    
     string nombre_archivo;
     nombre_archivo = argv[2];
 
