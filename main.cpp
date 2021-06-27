@@ -334,7 +334,7 @@ void tokenize(std::string const &str, const char delim,   //SEPARA LINEA DE TEXT
 
 
 
-void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<int> &vector_clientes, vector<Node*> &v,
+int solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<int> &vector_clientes, vector<Node*> &v,
                         vector<int> &nodos, vector <string> &materiales, int indexDepot, float cantidad_total){
 
     int its = 0;
@@ -352,14 +352,14 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
 
     //cout << "index depot es " << indexDepot << endl;
 
-    while (cantidad_total > 0 && its < 30){
+    while (cantidad_total > 0 && its < 100){
 
         its = its + 1;
         //se tiene camion y cliente al azar
 
         
         indexTruck = float_rand(0, camiones.size());
-
+        //cout << "index es " << indexTruck << endl;
         if (camiones[indexTruck]->clientes.size() == 0){ //PARA EL PRIMER CLIENTE DEL CAMION
 
             
@@ -462,7 +462,14 @@ void solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector
             }
         }
     }    
-    return;
+    if (cantidad_total > 0 ){
+        cout << "Algoritmo Greedy no encontró solución, se reiniciará el algoritmo." << endl;
+        return 0;
+    }
+    else{
+        cout << "Algoritmo Greedy encontró solución." << endl;
+    }
+    return 1;
 }
 
 
@@ -475,8 +482,8 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
     float z2 = 0.0;
 
     vector<int> path(v.size());
-
-    vector<float> Z;
+    //cout << "valor de alpha en fe" << alpha << endl;
+    vector<float> vectorZ;
 
     int i;
     int j;
@@ -611,6 +618,7 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
     //z2 = z2 + z2;
     //cout << "z1 * alpha " << z1*alpha << endl;
     //cout << "z2 * alpha " << z2*(1-alpha) << endl;
+    //cout << "valor suma es " << z1*alpha + z2*(1-alpha) << endl;
 
     z = z1*alpha + z2*(1-alpha); 
     //cout << "valor de alpha es " << alpha << endl;
@@ -618,11 +626,11 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
     //cout << "valor de z2 es " << z2 << endl;
     //cout << "valor de z es " << z << endl; 
 
-    Z.push_back(z);  //[0]
-    Z.push_back(z1); //[1]
-    Z.push_back(z2); //[2]
+    vectorZ.push_back(z);  //[0]
+    vectorZ.push_back(z1); //[1]
+    vectorZ.push_back(z2); //[2]
 
-    return Z;
+    return vectorZ;
 }
 
 vector <Truck*> movInsert(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, 
@@ -631,7 +639,7 @@ vector <Truck*> movInsert(vector<Truck*> camiones, vector<Node*> v, vector<int> 
     //cout << "MOVIMIENTO INSERT" << endl;
     vector <float> sol_error {-1, -1, -1};
     vector <float> valorFuncEval;
-
+    //cout << "valor de alpha en movinsert " << alpha << endl;
     vector <Truck*> retCamiones;
 
     vector<int> auxClientesTruck1 = camiones[c1]->clientes;
@@ -691,7 +699,7 @@ vector <float> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
 
     vector <float> sol_error {-1, -1, -1};
     vector <string> cargados;
-
+    //cout << "valor de alpha en mov2opt " << alpha << endl;
     int j;
     //cout << "vector original " << endl;
     //cout << "size es " << camiones[c1]->clientes.size() << endl;
@@ -758,11 +766,12 @@ vector <float> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
 
     for (j = 0; j < camiones[c1]->clientes.size(); j++){
         cout << "Id Cliente " << camiones[c1]->clientes[j] << endl;
-    }
-    */
+    }*/
+    
     //auxCamiones[c1]->clientes = auxClientesTruck;
     //cout << "antes del if " << endl;
     if (vector_compatible(camiones[c1]->cargados, materiales)){
+        //cout << "valor de alpha es " << alpha << endl;
         valorFuncEval = funcion_evaluacion(camiones, v, nodos, clientes, 
                                 alpha, materiales, indexDepot);    
     }
@@ -937,7 +946,7 @@ vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vec
     vector <float> solS_n;
     vector <float> sol_return;
     vector <float> sol_error {-1, -1, -1, -1, -1, -1, -1};
-
+    //cout << "valor de alpha en aplicar movimiento " << alpha << endl;
     vector <Truck*> retCamiones;
     //RECORDAR VER COMPATIBILIDAD DEL MOVIMIENTO
     //cout << "Antes del movimiento: " << endl << endl;
@@ -971,9 +980,26 @@ vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vec
                 cout << "Id Cliente " << camiones[c1]->clientes[j] << endl;
             }*/
             //cout << "error antes de f mov2opt" << endl;
+            if (abs(i-k) == 1){
+                //cout << "son iguales " << endl;
+                continue;
+            }
+            else{
+                solS_n = mov2Opt(camiones, v, nodos, clientes, 
+                                alpha, materiales, indexDepot, c1, i, k); //ESTO FUNCIONA BIEN, NO MODIFICA AL VECTOR    
+
+                if (solS_n[0] < min){
+                    //cout << "Z: " << solS_n[0] << endl;
+                    //cout << "Z1: " << solS_n[1] << endl;
+                    //cout << "Z2: " << solS_n[2] << endl;
+                    min = solS_n[0];
+                    pos1 = i;
+                    pos2 = k;
+                    sol_return = solS_n;
+                }
+            }
             
-            solS_n = mov2Opt(camiones, v, nodos, clientes, 
-                                alpha, materiales, indexDepot, c1, i, k); //ESTO FUNCIONA BIEN, NO MODIFICA AL VECTOR
+            
             //cout << "error dps de f mov2opt" << endl;
             //cout << "valor de la solucion es " << solS_n[0] << endl;
             //cout << "valor de "
@@ -984,21 +1010,12 @@ vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vec
             }*/
 
 
-            if (solS_n[0] < min){
-                //cout << "Z: " << solS_n[0] << endl;
-                //cout << "Z1: " << solS_n[1] << endl;
-                //cout << "Z2: " << solS_n[2] << endl;
-                min = solS_n[0];
-                pos1 = i;
-                pos2 = k;
-                sol_return = solS_n;
-            }
             
         } 
     }
-    cout << "solucion antes es " << solucionantes[0] << endl;
-    cout << "minimo es " << min << endl;
-    cout << "---------------" << endl;
+    //cout << "solucion antes es " << solucionantes[0] << endl;
+    //cout << "minimo es " << min << endl;
+    //cout << "---------------" << endl;
     /*cout << "Despues del movimiento: " << endl << endl;
     cout << "Para camion: " << camiones[c1]->id << endl;
     for (i = 0; i < camiones[c1]->clientes.size(); i++){    
@@ -1061,8 +1078,8 @@ int solucion_dominante(vector<float> sol_arc, vector<float> sCandidate){
             return 1; //SCANDIDATE DOMINA A SOL_ARC
         }
     }
-    else if (sol_arc[1] <= sCandidate[0] && sol_arc[2] <= sCandidate[1]){
-        if (sol_arc[1] < sCandidate[0] || sol_arc[2] < sCandidate[1]){
+    else if (sol_arc[0] <= sCandidate[1] && sol_arc[1] <= sCandidate[2]){
+        if (sol_arc[0] < sCandidate[1] || sol_arc[1] < sCandidate[2]){
             return -1; //SOL_ARC DOMINA A SCANDIDATE
         }
 
@@ -1077,8 +1094,10 @@ int main(int argc, char** argv)
 {
 
     int i_alpha;
-    vector<float> alphas {1};   
+    vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
+    //vector<float> alphas {0};
     float alpha;
+    vector<vector<float>> sols_arc;
     for (i_alpha = 0; i_alpha < alphas.size(); i_alpha++){
         alpha = alphas[i_alpha];    
    
@@ -1478,8 +1497,80 @@ int main(int argc, char** argv)
 
         //int i_alpha;
         //vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
-        solucionGreedy(camiones, clientes, vector_clientes, v,
+        int result_greedy;
+        int flag = 1;
+
+        vector<Truck*> aux_camiones_greedy;
+        vector <Cliente*> aux_clientes_greedy;
+        
+
+        /*for (i = 0; i < camiones.size(); i++){
+            cout << "Camion " << camiones[i]->id << endl;
+            for (j = 0; j < camiones[i]->clientes.size(); j++){
+                cout << "Cliente " << camiones[i]->clientes[j] << endl;
+            }
+        }*/
+
+        //solucionGreedy(camiones, clientes, vector_clientes, v,
+        //            nodos, materiales, indexDepot, cantidad_total);
+
+        /*for (i = 0; i < camiones.size(); i++){
+            cout << "Camion " << camiones[i]->id << endl;
+            for (j = 0; j < camiones[i]->clientes.size(); j++){
+                cout << "Cliente " << camiones[i]->clientes[j] << endl;
+            }
+        }*/
+
+        while (flag){
+            seed = seed + 1;
+            srand48(seed);
+            //cout << seed << endl;
+            //aux_camiones_greedy = camiones;
+            aux_camiones_greedy.clear();
+            aux_clientes_greedy.clear();
+
+            for (i = 0; i < camiones.size(); i++){
+                Truck *camion = new Truck(camiones[i]->id, camiones[i]->capacidad);
+                aux_camiones_greedy.push_back(camion);                    
+            }
+
+            for (j = 0; j < clientes.size(); j++){
+                Cliente *client = new Cliente(clientes[j]->vertexNumber, clientes[j]->cantidad, clientes[j]->material);            
+                aux_clientes_greedy.push_back(client);
+            }
+
+            /*for (i = 0; i < aux_camiones_greedy.size(); i++){
+                cout << "Camion " << aux_camiones_greedy[i]->id << endl;
+                for (j = 0; j < aux_camiones_greedy[i]->clientes.size(); j++){
+                    cout << "Cliente " << aux_camiones_greedy[i]->clientes[j] << endl;
+                }
+            }*/
+
+            
+
+            result_greedy = solucionGreedy(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
                             nodos, materiales, indexDepot, cantidad_total);
+
+            cout << "----------------------------" << endl;
+
+            /*for (i = 0; i < aux_camiones_greedy.size(); i++){
+                cout << "Camion " << aux_camiones_greedy[i]->id << endl;
+                for (j = 0; j < aux_camiones_greedy[i]->clientes.size(); j++){
+                cout << "Cliente " << aux_camiones_greedy[i]->clientes[j] << endl;
+                }
+            }*/
+
+            if (result_greedy){
+                flag = 0;
+            }
+        }
+
+
+        camiones = aux_camiones_greedy; 
+
+        
+
+
 
         //cout << "cantidad total es " << cantidad_total << endl;
         cout << "Zona: " << fileToTest << endl;
@@ -1553,9 +1644,11 @@ int main(int argc, char** argv)
         //std::ofstream outfile;
         //ifstream myfile_read_arc_solucion;
 
-        vector<vector<float>> sols_arc;
+        
         //vector <float> sol_arc {solucionGral[1], solucionGral[2]};
         //sols_arc.push_back(sol_arc);
+        //vector<vector<float>> sols_arc;
+
 
         int sol_no_accept;
         int sol_add;
@@ -1572,7 +1665,7 @@ int main(int argc, char** argv)
             prob = float_rand(0,1);
             //cout << "prob es " << prob << endl;
             //vecindario de la mejor solucion
-            //cout << "valor its " << its << endl;
+            cout << "valor its " << its << endl;
 
             //cout << aux_camiones[1]->clientes[3] << endl;
 
@@ -1614,7 +1707,7 @@ int main(int argc, char** argv)
                         valorFuncEval = sol_error;
                     }
                     //HAY QUE HACER ESTO candidate_aux_camiones = aplicar_movimiento(...)
-
+                    //cout << "valor de alpha en main es " << alpha << endl;
                     //continue;
                     /*cout << "DESPUES DEL MOV " << endl;
                     for (i = 0; i < aux_camiones[c1]->clientes.size(); i++){
@@ -1719,29 +1812,49 @@ int main(int argc, char** argv)
                 //cout << "s[1] es " << sCandidate[1] << endl;
                 //cout << "s[2] es " << sCandidate[2] << endl;
                 cout << sCandidate[0] << " "<< sCandidate[1] << " "<< sCandidate[2] << endl;
-
+                vector <float> sol_igual {sCandidate[1], sCandidate[2]};
                 if (sols_arc.size() == 0){
                     vector <float> sol_arc {sCandidate[1], sCandidate[2]};
                     sols_arc.push_back(sol_arc);
                 }
 
+                //else if(std::find(sols_arc.begin(), sols_arc.end(), sol_igual) != sols_arc.end()) {
+                //    continue;
+                //}
                 else{
                     for (i = 0; i < sols_arc.size(); i++){  
+                        //cout << "valor de i es " << i << endl;
                         //cout << "dentro if " << endl;
                         //cout << "size es " << sols_arc[i].size() << endl;
                         //sols_arc.push_back(sCandidate);
                         //cout << "dps de for " << endl;
+                        //cout << "Comparando con " << sols_arc[i][0] << " " << sols_arc[i][1] << endl;
+                        //cout << "sCandidate " << sCandidate[1] << " " << sCandidate [2] << endl;
                         if (solucion_dominante(sols_arc[i], sCandidate) == 1){ //Scandidate domina
                             //cout << "antes del reemplazo " << endl;
                             //cout << "valor 1  es " << sols_arc[i][0] << endl; 
                             //cout << "valor 2  es " << sols_arc[i][1] << endl; 
+                            //cout << "Comparando con " << sols_arc[i][0] << " " << sols_arc[i][1] << endl;
+                            //cout << "sCandidate " << sCandidate[1] << " " << sCandidate [2] << endl;
                             if (sol_add){ //Si sCandidate ya fue agregado, solo eliminar a solucion a la que domina
+                                //cout << "quitando " << sols_arc[i][0] << " " << sols_arc[i][1] << endl;
                                 sols_arc.erase(sols_arc.begin() + i);
                             }
                             else{  //Reemplazar la solucion actual por sCandidate
-                                vector <float> s_replace {sCandidate[1], sCandidate[2]};        
-                                std::replace (sols_arc.begin(), sols_arc.end(), sols_arc[i], s_replace);
-                                sol_add = 1;
+                                //vector <float> s_replace {sCandidate[1], sCandidate[2]};        
+                                sols_arc.erase(sols_arc.begin() + i);
+
+                                //std::replace (sols_arc.begin(), sols_arc.end(), sols_arc[i], s_replace);
+                                vector <float> sol_arc {sCandidate[1], sCandidate[2]};
+                                if (std::find(sols_arc.begin(), sols_arc.end(), sol_igual) != sols_arc.end()){ //ya esta en el vector la sol
+                                    continue;
+                                }
+                                else{
+                                    sols_arc.push_back(sol_arc);    
+                                }
+                                
+                                //cout << "Agregando aqui " << sCandidate[1] << " " << sCandidate [2] << endl;
+                                sol_add = 1; 
                             }
                             
                             //cout << "entre medio " << endl;
@@ -1753,7 +1866,7 @@ int main(int argc, char** argv)
                             //cout << "ES DOMINANTE " << endl;
                         
                         }
-                        else if(solucion_dominante(sols_arc[i], sCandidate) == -1){ //descargar Scandidate
+                        else if(solucion_dominante(sols_arc[i], sCandidate) == -1){ //descartar Scandidate
                             sol_no_accept = 1;
 
                             //cout << "no es dom  " << endl;
@@ -1766,8 +1879,16 @@ int main(int argc, char** argv)
                                 continue;
                             }
                             else{  //Agregar sol
+
                                 vector <float> sol_arc {sCandidate[1], sCandidate[2]};
-                                sols_arc.push_back(sol_arc);
+                                if (std::find(sols_arc.begin(), sols_arc.end(), sol_igual) != sols_arc.end()){ //ya esta en el vector la sol
+                                    continue;
+                                }
+                                else{
+                                    sols_arc.push_back(sol_arc);    
+                                }
+                                //cout << "nd Comparando con " << sols_arc[i][0] << " " << sols_arc[i][1] << endl;
+                                //cout << "nd Agregando " << sCandidate[1] << " " << sCandidate [2] << endl;
                                 sol_add = 1;
                             }
                         }
@@ -1788,13 +1909,14 @@ int main(int argc, char** argv)
         for (i = 0; i < sols_arc.size(); i++){
             cout << "Z1: " << sols_arc[i][0] << endl;
             cout << "Z2: " << sols_arc[i][1] << endl;
+            cout << "----------------------" << endl;
         }
 
-        vector<float> s_final;
-        s_final = funcion_evaluacion(aux_camiones, v, nodos, clientes, 
-                                    alpha, materiales, indexDepot);
+        //vector<float> s_final;
+        //s_final = funcion_evaluacion(aux_camiones, v, nodos, clientes, 
+        //                            alpha, materiales, indexDepot);
 
-        cout << s_final[0] << " "<< s_final[1] << " "<< s_final[2] << endl;
+        //cout << s_final[0] << " "<< s_final[1] << " "<< s_final[2] << endl;
 
 
         /*for (i = 0; i < clientesFile.size(); i++){
