@@ -4,13 +4,13 @@ make compile
 
 Luego de esto ejecutar el código con el comando:
 
-./main semilla valor_alfa largo_lista_tabu max_iteraciones nombre_archivo
+./main semilla cantidad_alfas largo_lista_tabu max_iteraciones nombre_archivo
 
 Donde:
 
 semilla: Valor de la semilla.
 
-valor_alfa: Valor de alfa, que corresponde al peso del objetivo riesgos.
+cantidad_alfas: Cantidad de alfa, el mínimo son 2 para considerar alfa = 0 y alfa = 1. Si se ingresa un número menor a 2, se ignorará y tomara los alfas 0 y 1.
 
 largo_lista_tabu: Corresponde al largo de la lista tabu, en donde se almacenan las
 soluciones ya visitadas (aún no esta implementado).
@@ -22,8 +22,8 @@ nombre_archivo: Nombre del archivo (instancia).
 Los valores por defecto de estos parámetros son:
 
 semilla = 1
-valor_alfa =0
-largo_lista_tabu =7
+cantidad_alfas = 10
+largo_lista_tabu = 7
 max_its = 30
 nombre_archivo = 'peligro-mezcla4-min-riesgo-zona1-2k-AE.2.hazmat'
 

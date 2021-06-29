@@ -1094,8 +1094,31 @@ int main(int argc, char** argv)
 {
 
     int i_alpha;
-    vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
-    //vector<float> alphas {0};
+    //vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
+    //vector<float> alphas {1};
+    float cantidad_alphas = atof(argv[2]);
+    int maxlistatabu = atof(argv[3]);
+    int max_its = atoi(argv[4]);
+    string fileToTest = argv[5];
+
+    cout << "Zona: " << fileToTest << endl;
+    cout << "-------" << endl;
+
+    vector<float> alphas;
+
+    alphas.push_back(0);
+
+    float sum_alpha = 0;
+
+    for (i_alpha = 0; i_alpha < cantidad_alphas-2; i_alpha++){
+
+        sum_alpha = sum_alpha + (1/(cantidad_alphas-1));
+        alphas.push_back(sum_alpha);
+
+    }
+
+    alphas.push_back(1);
+
     float alpha;
     vector<vector<float>> sols_arc;
     for (i_alpha = 0; i_alpha < alphas.size(); i_alpha++){
@@ -1103,11 +1126,6 @@ int main(int argc, char** argv)
    
          
         cout << "Para alfa: " << alpha << endl;
-
-        
-
-
-
 
         ifstream in("hazmat.txt");
 
@@ -1368,9 +1386,7 @@ int main(int argc, char** argv)
 
         //float alpha = atof(argv[2]);
         //float alpha;
-        int maxlistatabu = atof(argv[3]);
-        int max_its = atoi(argv[4]);
-        string fileToTest = argv[5];
+
 
         myfile.open(fileToTest);
 
@@ -1573,15 +1589,13 @@ int main(int argc, char** argv)
 
 
         //cout << "cantidad total es " << cantidad_total << endl;
-        cout << "Zona: " << fileToTest << endl;
-        cout << "-------" << endl;
+
 
 
 
         vector<float> solucionGral = funcion_evaluacion(camiones, v, nodos, clientes, alpha, 
                                     materiales, indexDepot);
 
-        cout << "-------" << endl;
         //cout << "valor es total es " << solucionGral[0] << endl;
         //cout << "valor z1 es " << solucionGral[1] << endl;
         //cout << "valor z2 es " << solucionGral[2] << endl;
@@ -1665,7 +1679,7 @@ int main(int argc, char** argv)
             prob = float_rand(0,1);
             //cout << "prob es " << prob << endl;
             //vecindario de la mejor solucion
-            cout << "valor its " << its << endl;
+            //cout << "valor its " << its << endl;
 
             //cout << aux_camiones[1]->clientes[3] << endl;
 
@@ -1811,7 +1825,7 @@ int main(int argc, char** argv)
                 //cout << "s candidate es " << sCandidate[0] << endl;
                 //cout << "s[1] es " << sCandidate[1] << endl;
                 //cout << "s[2] es " << sCandidate[2] << endl;
-                cout << sCandidate[0] << " "<< sCandidate[1] << " "<< sCandidate[2] << endl;
+                //cout << sCandidate[0] << " "<< sCandidate[1] << " "<< sCandidate[2] << endl;
                 vector <float> sol_igual {sCandidate[1], sCandidate[2]};
                 if (sols_arc.size() == 0){
                     vector <float> sol_arc {sCandidate[1], sCandidate[2]};
@@ -1905,7 +1919,7 @@ int main(int argc, char** argv)
 
             its = its + 1;
         }
-        cout << "Mejor resultado: " << endl;
+        cout << "Resultados: " << endl;
         for (i = 0; i < sols_arc.size(); i++){
             cout << "Z1: " << sols_arc[i][0] << endl;
             cout << "Z2: " << sols_arc[i][1] << endl;
@@ -2060,7 +2074,3 @@ int main(int argc, char** argv)
     }
     return 0;
 }
-
-
-
-
