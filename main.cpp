@@ -1097,12 +1097,6 @@ int main(int argc, char** argv)
     //vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
     //vector<float> alphas {1};
     float cantidad_alphas = atof(argv[2]);
-    int maxlistatabu = atof(argv[3]);
-    int max_its = atoi(argv[4]);
-    string fileToTest = argv[5];
-
-    cout << "Zona: " << fileToTest << endl;
-    cout << "-------" << endl;
 
     vector<float> alphas;
 
@@ -1386,6 +1380,9 @@ int main(int argc, char** argv)
 
         //float alpha = atof(argv[2]);
         //float alpha;
+        float maxlistatabu = atof(argv[3]);
+        int max_its = atoi(argv[4]);
+        string fileToTest = argv[5];
 
 
         myfile.open(fileToTest);
@@ -1589,7 +1586,8 @@ int main(int argc, char** argv)
 
 
         //cout << "cantidad total es " << cantidad_total << endl;
-
+        cout << "Zona: " << fileToTest << endl;
+        cout << "-------" << endl;
 
 
 
@@ -1669,6 +1667,13 @@ int main(int argc, char** argv)
         vector <float> valorFuncEval {0, 0, 0};
         vector <float> sol_error {-1, -1, -1};
 
+        vector<vector<int>> lista_tabu;
+        vector <int> mov_tabu;
+
+        lista_tabu.clear();
+
+
+
         //LISTA TABU <(CAM1, CAM2, CLIENTE1, CLIENTE2)>
 
         //INSERT <(CAM1, CAM2, CLIENTE1, CLIENTE2)>
@@ -1733,6 +1738,8 @@ int main(int argc, char** argv)
                 //cout << "mov 2opt" << endl;
                 c1 = float_rand(0, camiones.size());
                 c2 = -1;
+                pos1 = -1;
+                pos2 = -1;
                 //pos1 = float_rand(0, camiones[c1]->clientes.size() );
                 //pos2 = float_rand(pos1, camiones[c1]->clientes.size() );
 
@@ -1760,7 +1767,7 @@ int main(int argc, char** argv)
                     }
                 }*/
                 candidate_aux_camiones = aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, 
-                                    materiales, indexDepot, tipoMov, c1, -1, -1, -1);
+                                    materiales, indexDepot, tipoMov, c1, c2, pos1, pos2);
 
                 /*for (i = 0; i < candidate_aux_camiones.size(); i++){
                     cout << "Camion: " << candidate_aux_camiones[i]->id << endl;
@@ -1816,7 +1823,43 @@ int main(int argc, char** argv)
 
             //cout << "scandidate[0] es " << sCandidate[0] << endl;
 
-            if (sCandidate[0] != -1 ){
+            mov_tabu.clear();
+            mov_tabu.push_back(c1);
+            mov_tabu.push_back(c2);
+            mov_tabu.push_back(pos1);
+            mov_tabu.push_back(pos2);
+
+            /*int q,w;
+
+            cout << "entrara " << endl;
+
+            cout << "c1 " << mov_tabu[0] << endl;
+            cout << "c2 " << mov_tabu[1] << endl;
+            cout << "pos1 " << mov_tabu[2] << endl;
+            cout << "pos2 " << mov_tabu[3] << endl;
+
+            cout << "en el vector hay: " << endl;
+
+            for (q = 0; q < lista_tabu.size(); q++){
+                cout << "c1 " << lista_tabu[q][0] << endl;
+                cout << "c2 " << lista_tabu[q][1] << endl;
+                cout << "pos1 " << lista_tabu[q][2] << endl;
+                cout << "pos2 " << lista_tabu[q][3] << endl;
+            }*/
+
+            if (sCandidate[0] != -1 && !(std::find(lista_tabu.begin(), lista_tabu.end(), mov_tabu) != lista_tabu.end())) {   
+            //if (sCandidate[0] != -1){
+                //si sCandidate es sol valida y si el movimiento no esta en la lista tabú
+                int largo_lista_tabu = maxlistatabu*clientes.size();
+                //cout << "clientes size " << clientes.size() << endl;
+                //cout << "largo max lista tabu " << largo_lista_tabu << endl;
+                lista_tabu.push_back(mov_tabu);
+                //cout << "largo lista tabu " << lista_tabu.size() << endl;
+
+                if (lista_tabu.size() == largo_lista_tabu){
+
+                    lista_tabu.erase(lista_tabu.begin());
+                }
 
                 sCandidateD = sCandidate[1];
                 sCandidateR = sCandidate[2];
@@ -2074,3 +2117,7 @@ int main(int argc, char** argv)
     }
     return 0;
 }
+
+
+
+

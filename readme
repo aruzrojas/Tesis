@@ -12,8 +12,7 @@ semilla: Valor de la semilla.
 
 cantidad_alfas: Cantidad de alfa, el mínimo son 2 para considerar alfa = 0 y alfa = 1. Si se ingresa un número menor a 2, se ignorará y tomara los alfas 0 y 1.
 
-largo_lista_tabu: Corresponde al largo de la lista tabu, en donde se almacenan las
-soluciones ya visitadas (aún no esta implementado).
+Tasa lista tabú: Corresponde al largo de la lista tabu, en donde se almacenan las soluciones ya visitadas, su valor está debe estar entre 0 y 1. El largo de la lista tabú corresponde a una parte del total de clientes. Por ejemplo si el total de clientes es 12 y la tasa de la lista tabú es 0.3, el largo de la lista tabú sera de 3.
 
 max_iteraciones: Cantidad máxima de iteraciones del algoritmo Tabu Search.
 
@@ -23,7 +22,7 @@ Los valores por defecto de estos parámetros son:
 
 semilla = 1
 cantidad_alfas = 10
-largo_lista_tabu = 7
+largo_lista_tabu = 0.3
 max_its = 30
 nombre_archivo = 'peligro-mezcla4-min-riesgo-zona1-2k-AE.2.hazmat'
 
