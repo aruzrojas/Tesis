@@ -331,11 +331,323 @@ void tokenize(std::string const &str, const char delim,   //SEPARA LINEA DE TEXT
     }
 }
 
+bool myComparison(const pair<int,float> &a,const pair<int,float> &b)
+{
+       return a.second<b.second;
+}
 
 
+int solucionGreedyListaAzar(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<int> &vector_clientes, vector<Node*> &v,
+                        vector<int> &nodos, vector <string> &materiales, int indexDepot, float cantidad_total, float alpha){
+
+    int its = 0;
+    float z_distancias = 0;
+    string material;
+    int i;
+    int posi;
+    string mat_client;
+    int indexClient;
+    int indexTruck;
+    int idClient;
+    int idTruck;
+
+    vector<int> path(v.size());
+
+    //cout << "index depot es " << indexDepot << endl;
+    alpha = 0.5;
+
+    while (cantidad_total > 0 && its < 100){
+
+        its = its + 1;
+        //se tiene camion y cliente al azar
+
+        
+        indexTruck = float_rand(0, camiones.size());
+        //cout << "index es " << indexTruck << endl;
+        if (camiones[indexTruck]->clientes.size() == 0){ //PARA EL PRIMER CLIENTE DEL CAMION
+
+            
+            indexClient = float_rand(0, clientes.size());    
+
+            if(clientes[indexClient]->cantidad != 0){
+                //cout << "index cliente es " << indexClient << endl;
+                idClient = clientes[indexClient]->vertexNumber;
+                //cout << "Cliente es " << idClient << endl;
+
+                //cout << "index camion es " << indexTruck << endl;
+                idTruck = camiones[indexTruck]->id;
+                //cout << "Camion es " << idTruck << endl;
+
+                camiones[indexTruck]->clientes.push_back(idClient);   //agregar cliente
+                mat_client = clientes[indexClient]->material;         //obtener material del cliente
+                camiones[indexTruck]->cargados.push_back(mat_client); //agregar material del cliente
+                camiones[indexTruck]->mat_dom = mat_client;           //colocar como dominante el mat del cliente
+                camiones[indexTruck]->capacidad = camiones[indexTruck]->capacidad - clientes[indexClient]->cantidad;
+                camiones[indexTruck]->nodo_actual = clientes[indexClient]->vertexNumber;
+                //cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
+                camiones[indexTruck]->ruta = camiones[indexTruck]->ruta +  std::to_string(clientes[indexClient]->vertexNumber) + " -> ";
+                camiones[indexTruck]->nodosVisitados.push_back(clientes[indexClient]->vertexNumber);
+
+                cantidad_total = cantidad_total - clientes[indexClient]->cantidad;
+                clientes[indexClient]->cantidad = 0;
+
+                vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);
+                
+
+                //z_distancias = z_distancias + distancias[indexDepot];
+                z_distancias = z_distancias + distancias[indexClient];
+            }
+        }
+
+        else if (camiones[indexTruck]->clientes.size() != 0 && cantidad_total != 0){
+
+            //cout << "valor de cantidad total es " << cantidad_total << endl;
+            //cout << "entrando al for " << endl;
+            //cout << "cantidad de cleintes es " << camiones[indexTruck]->clientes.size() << endl;
+            idClient = camiones[indexTruck]->clientes[camiones[indexTruck]->clientes.size()-1];
+            //cout << "Nodo actual es  " << idClient << endl;
+            std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClient);
+            //cout << "2 " << endl;
+            indexClient = std::distance(nodos.begin(), itA); //POS EN v DEL NODO ACTUAL DEL CAMION J 
+            //idClient es el vertexnumber del nodo actual de la ruta del camion
+            //indexclient es la posicion en v del nodo idclient
+
+            //cout << "id camion es " << camiones[indexTruck]->id << endl;
+            //cout << "indexclient es  " << indexClient << endl;
+            //cout << "id client es " << idClient << endl;
+            //cout << "index segun trucks es " << camiones[indexTruck]->nodo_actual << endl;
+
+            vector<float> distancias = dijkstraDist(v, indexClient, path, 1);
+            //cout << "4 " << endl;
+            //borrado esto posi = obtener_minimo_compatibles(distancias, clientes, camiones[indexTruck]->mat_dom, materiales, camiones[indexTruck]->cargados, nodos);
+            
+            //indexClient = float_rand(0, clientes.size());
+
+            vector<pair<int,float>> optionClients; //TUPLA {IDCLIENTE, DISTANCIA}
+ 
+            for (i = 0; i < vector_clientes.size(); i ++){
+                if (clientes[i]->cantidad != 0){
+
+                    itA = std::find(nodos.begin(), nodos.end(), clientes[i]->vertexNumber);
+                    posi = std::distance(nodos.begin(), itA);
+
+                    optionClients.push_back({vector_clientes[i], distancias[posi]});
+
+                    //cout << "------" << endl;
+                    //cout << vector_clientes[i] << endl;
+                    //cout << distancias[posi] << endl;
+                }
+            }
+
+            /*cout << "antes del sort " << endl;
+
+            for (i = 0; i < optionClients.size(); i++){
+                cout << "------" << endl;
+                cout << optionClients[i].first << endl;
+                cout << optionClients[i].second << endl;
+            }*/
+
+            sort(optionClients.begin(),optionClients.end(),myComparison);
+
+            /*cout << "dps del sort" << endl;
+
+            for (i = 0; i < optionClients.size(); i++){
+                cout << "------" << endl;
+                cout << optionClients[i].first << endl;
+                cout << optionClients[i].second << endl;
+            }*/
+
+            int lenOptionClients = ceil((1-alpha) * optionClients.size());
+            if (alpha == 1.0){
+                lenOptionClients = 1;
+            }
+
+            vector<pair<float,int>> subOptionClients = {optionClients.begin(), optionClients.begin() + lenOptionClients};
+
+            /*cout << "len de subOptionClients es " << subOptionClients.size();
+
+            for (i = 0; i < subOptionClients.size(); i++){
+                cout << "------" << endl;
+                cout << subOptionClients[i].first << endl;
+                cout << subOptionClients[i].second << endl;
+            }*/
+
+
+            int indexClientInSubOption = float_rand(0, subOptionClients.size());
+
+
+            //cout << "index client es " << indexClient << endl;
+
+            itA = std::find(nodos.begin(), nodos.end(), subOptionClients[indexClientInSubOption].first);
+            posi = std::distance(nodos.begin(), itA); //obtener posi en nodos, para calcualr distancias[posi]
+
+            itA = std::find(vector_clientes.begin(), vector_clientes.end(), subOptionClients[indexClientInSubOption].first);
+            indexClient = std::distance(vector_clientes.begin(), itA); //obtener indexclient en vector clientes
+
+            if (clientes[indexClient]->cantidad != 0){
+
+                if (compatible_todos(camiones[indexTruck]->cargados, clientes[indexClient]->material, materiales)){
+                    //ACTUALIZAR VALORES
+                    idClient = clientes[indexClient]->vertexNumber;
+                    camiones[indexTruck]->clientes.push_back(idClient);   //agregar cliente
+                    mat_client = clientes[indexClient]->material;         //obtener material del cliente
+                    camiones[indexTruck]->cargados.push_back(mat_client); //agregar material del cliente
+
+                    camiones[indexTruck]->mat_dom = actualizar_dominante(camiones[indexTruck]->cargados, materiales); //colocar como dominante el mat del cliente
+                    camiones[indexTruck]->capacidad = camiones[indexTruck]->capacidad - clientes[indexClient]->cantidad;
+                    camiones[indexTruck]->nodo_actual = clientes[indexClient]->vertexNumber;
+                    //cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
+                    camiones[indexTruck]->ruta = camiones[indexTruck]->ruta  +  std::to_string(clientes[indexClient]->vertexNumber) + " -> ";
+                    camiones[indexTruck]->nodosVisitados.push_back(clientes[indexClient]->vertexNumber);
+                    //cout << "continua "<< endl;
+
+                    cantidad_total = cantidad_total - clientes[indexClient]->cantidad;
+                    //cout << "cae aca " << endl;
+                    clientes[indexClient]->cantidad = 0;
+                    z_distancias = z_distancias + distancias[posi];
+                }
+                
+            }
+        }
+    }    
+    if (cantidad_total > 0 ){
+        cout << "Algoritmo Greedy no encontró solución, se reiniciará el algoritmo." << endl;
+        return 0;
+    }
+    else{
+        cout << "Algoritmo Greedy encontró solución." << endl;
+    }
+    return 1;
+}
+
+int solucionGreedyAzar(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<int> &vector_clientes, vector<Node*> &v,
+                        vector<int> &nodos, vector <string> &materiales, int indexDepot, float cantidad_total, float alpha){
+
+    int its = 0;
+    float z_distancias = 0;
+    string material;
+    int i;
+    int posi;
+    string mat_client;
+    int indexClient;
+    int indexTruck;
+    int idClient;
+    int idTruck;
+
+    vector<int> path(v.size());
+
+    //cout << "index depot es " << indexDepot << endl;
+
+    while (cantidad_total > 0 && its < 100){
+
+        its = its + 1;
+        //se tiene camion y cliente al azar
+
+        
+        indexTruck = float_rand(0, camiones.size());
+        //cout << "index es " << indexTruck << endl;
+        if (camiones[indexTruck]->clientes.size() == 0){ //PARA EL PRIMER CLIENTE DEL CAMION
+
+            
+            indexClient = float_rand(0, clientes.size());    
+
+            if(clientes[indexClient]->cantidad != 0){
+                //cout << "index cliente es " << indexClient << endl;
+                idClient = clientes[indexClient]->vertexNumber;
+                //cout << "Cliente es " << idClient << endl;
+
+                //cout << "index camion es " << indexTruck << endl;
+                idTruck = camiones[indexTruck]->id;
+                //cout << "Camion es " << idTruck << endl;
+
+                camiones[indexTruck]->clientes.push_back(idClient);   //agregar cliente
+                mat_client = clientes[indexClient]->material;         //obtener material del cliente
+                camiones[indexTruck]->cargados.push_back(mat_client); //agregar material del cliente
+                camiones[indexTruck]->mat_dom = mat_client;           //colocar como dominante el mat del cliente
+                camiones[indexTruck]->capacidad = camiones[indexTruck]->capacidad - clientes[indexClient]->cantidad;
+                camiones[indexTruck]->nodo_actual = clientes[indexClient]->vertexNumber;
+                //cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
+                camiones[indexTruck]->ruta = camiones[indexTruck]->ruta +  std::to_string(clientes[indexClient]->vertexNumber) + " -> ";
+                camiones[indexTruck]->nodosVisitados.push_back(clientes[indexClient]->vertexNumber);
+
+                cantidad_total = cantidad_total - clientes[indexClient]->cantidad;
+                clientes[indexClient]->cantidad = 0;
+
+                vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);
+                
+
+                //z_distancias = z_distancias + distancias[indexDepot];
+                z_distancias = z_distancias + distancias[indexClient];
+            }
+        }
+
+        else if (camiones[indexTruck]->clientes.size() != 0 && cantidad_total != 0){
+
+            //cout << "valor de cantidad total es " << cantidad_total << endl;
+            //cout << "entrando al for " << endl;
+            //cout << "cantidad de cleintes es " << camiones[indexTruck]->clientes.size() << endl;
+            idClient = camiones[indexTruck]->clientes[camiones[indexTruck]->clientes.size()-1];
+            //cout << "Nodo actual es  " << idClient << endl;
+            std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClient);
+            //cout << "2 " << endl;
+            indexClient = std::distance(nodos.begin(), itA); //POS EN v DEL NODO ACTUAL DEL CAMION J 
+            //idClient es el vertexnumber del nodo actual de la ruta del camion
+            //indexclient es la posicion en v del nodo idclient
+
+            //cout << "id camion es " << camiones[indexTruck]->id << endl;
+            //cout << "indexclient es  " << indexClient << endl;
+            //cout << "id client es " << idClient << endl;
+            //cout << "index segun trucks es " << camiones[indexTruck]->nodo_actual << endl;
+
+            vector<float> distancias = dijkstraDist(v, indexClient, path, 1);
+            //cout << "4 " << endl;
+            //borrado esto posi = obtener_minimo_compatibles(distancias, clientes, camiones[indexTruck]->mat_dom, materiales, camiones[indexTruck]->cargados, nodos);
+            
+            indexClient = float_rand(0, clientes.size());
+
+            //cout << "index client es " << indexClient << endl;
+
+            itA = std::find(nodos.begin(), nodos.end(), clientes[indexClient]->vertexNumber);
+            posi = std::distance(nodos.begin(), itA);
+
+            if (clientes[indexClient]->cantidad != 0){
+
+                if (compatible_todos(camiones[indexTruck]->cargados, clientes[indexClient]->material, materiales)){
+                    //ACTUALIZAR VALORES
+                    idClient = clientes[indexClient]->vertexNumber;
+                    camiones[indexTruck]->clientes.push_back(idClient);   //agregar cliente
+                    mat_client = clientes[indexClient]->material;         //obtener material del cliente
+                    camiones[indexTruck]->cargados.push_back(mat_client); //agregar material del cliente
+
+                    camiones[indexTruck]->mat_dom = actualizar_dominante(camiones[indexTruck]->cargados, materiales); //colocar como dominante el mat del cliente
+                    camiones[indexTruck]->capacidad = camiones[indexTruck]->capacidad - clientes[indexClient]->cantidad;
+                    camiones[indexTruck]->nodo_actual = clientes[indexClient]->vertexNumber;
+                    //cout << "nodo actual es " << camiones[indexTruck]->nodo_actual << endl;
+                    camiones[indexTruck]->ruta = camiones[indexTruck]->ruta  +  std::to_string(clientes[indexClient]->vertexNumber) + " -> ";
+                    camiones[indexTruck]->nodosVisitados.push_back(clientes[indexClient]->vertexNumber);
+                    //cout << "continua "<< endl;
+
+                    cantidad_total = cantidad_total - clientes[indexClient]->cantidad;
+                    //cout << "cae aca " << endl;
+                    clientes[indexClient]->cantidad = 0;
+                    z_distancias = z_distancias + distancias[posi];
+                }
+                
+            }
+        }
+    }    
+    if (cantidad_total > 0 ){
+        cout << "Algoritmo Greedy no encontró solución, se reiniciará el algoritmo." << endl;
+        return 0;
+    }
+    else{
+        cout << "Algoritmo Greedy encontró solución." << endl;
+    }
+    return 1;
+}
 
 int solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<int> &vector_clientes, vector<Node*> &v,
-                        vector<int> &nodos, vector <string> &materiales, int indexDepot, float cantidad_total){
+                        vector<int> &nodos, vector <string> &materiales, int indexDepot, float cantidad_total, float alpha){
 
     int its = 0;
     float z_distancias = 0;
@@ -1561,8 +1873,8 @@ int main(int argc, char** argv)
 
             
 
-            result_greedy = solucionGreedy(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
-                            nodos, materiales, indexDepot, cantidad_total);
+            result_greedy = solucionGreedyListaAzar(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
+                            nodos, materiales, indexDepot, cantidad_total, alpha);
 
             cout << "----------------------------" << endl;
 
