@@ -4,7 +4,7 @@ make compile
 
 Luego de esto ejecutar el código con el comando:
 
-./main semilla cantidad_alfas largo_lista_tabu max_iteraciones nombre_archivo
+./main semilla cantidad_alfas largo_lista_tabu max_iteraciones algoritmo_Greedy nombre_archivo 
 
 Donde:
 
@@ -16,6 +16,8 @@ Tasa lista tabú: Corresponde al largo de la lista tabu, en donde se almacenan l
 
 max_iteraciones: Cantidad máxima de iteraciones del algoritmo Tabu Search.
 
+algoritmo_Greedy: Algoritmo Greedy a utilizar. Si se ingresa opción 1, se utiliza el algoritmo Greedy asignando clientes a las rutas de forma azar. Si se ingresa la opción 2, se utiliza el algoritmo Greedy con listas, en donde se añaden las posibles rutas desde un punto a una lista y se ordenan por costos, y así se asigna un cliente a una ruta de forma aleatoria de dicha lista. Si se ingresa cualquier otro valor (número), se utiliza el algoritmo Greedy, en donde se obtiene el costo mínimo desde un punto para ir a un próximo cliente.
+
 nombre_archivo: Nombre del archivo (instancia).
 
 Los valores por defecto de estos parámetros son:
@@ -24,6 +26,7 @@ semilla = 1
 cantidad_alfas = 10
 largo_lista_tabu = 0.3
 max_its = 30
+algoritmo_Greedy = 3
 nombre_archivo = 'peligro-mezcla4-min-riesgo-zona1-2k-AE.2.hazmat'
 
 Con el comando make clean, se borra el compilador.
