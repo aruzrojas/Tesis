@@ -6,7 +6,8 @@
 #include <algorithm>
 #include <bits/stdc++.h>
 #include <tuple>
-#include<iterator>
+#include <iterator>
+#include <time.h>
 
 using namespace std;
 #include <bits/stdc++.h>
@@ -1587,7 +1588,9 @@ int solucion_dominante(vector<float> sol_arc, vector<float> sCandidate){
 
 int main(int argc, char** argv)
 {
-
+    clock_t t_total = clock();
+    int i;
+    string fileToTest = argv[6];
     int i_alpha;
     //vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
     //vector<float> alphas {1};
@@ -1613,6 +1616,7 @@ int main(int argc, char** argv)
     for (i_alpha = 0; i_alpha < alphas.size(); i_alpha++){
         alpha = alphas[i_alpha];    
 
+        clock_t t_alfa = clock();
  
         cout << "Para alfa: " << alpha << endl;
     
@@ -1638,7 +1642,8 @@ int main(int argc, char** argv)
         vector <int> nodos;
 
         char str[255];
-        int i = 0;
+        
+        i = 0;
 
         vector<Node*> v;
         vector<Truck*> t;
@@ -1879,9 +1884,10 @@ int main(int argc, char** argv)
         float maxlistatabu = atof(argv[3]);
         int max_its = atoi(argv[4]);
         int optionGreedy = atoi(argv[5]);
-        string fileToTest = argv[6];
+        
         
         myfile.open(fileToTest);
+
 
 
         vector<int> clientesFile;
@@ -2058,20 +2064,19 @@ int main(int argc, char** argv)
             }*/
 
             if (optionGreedy == 1){
-                cout << "Se utilizará el Algoritmo Greedy azar" << endl;
                 result_greedy = solucionGreedyAzar(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
                             nodos, materiales, indexDepot, cantidad_total, alpha);
             }
             else if(optionGreedy == 2){
-                cout << "Se utilizará el Algoritmo Greedy con listas azar" << endl;
                 result_greedy = solucionGreedyListaAzar(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
                             nodos, materiales, indexDepot, cantidad_total, alpha);
             }
             else{
-                cout << "Se utilizará el Algoritmo Greedy común" << endl;
                 result_greedy = solucionGreedy(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
                             nodos, materiales, indexDepot, cantidad_total, alpha);
             }
+
+            
 
             cout << "----------------------------" << endl;
 
@@ -2103,9 +2108,9 @@ int main(int argc, char** argv)
         vector<float> solucionGral = funcion_evaluacion(camiones, v, nodos, clientes, vector_clientes, alpha, 
                                     materiales, indexDepot);
 
-        cout << "valor es total es " << solucionGral[0] << endl;
-        cout << "valor z1 es " << solucionGral[1] << endl;
-        cout << "valor z2 es " << solucionGral[2] << endl;
+        //cout << "valor es total es " << solucionGral[0] << endl;
+        //cout << "valor z1 es " << solucionGral[1] << endl;
+        //cout << "valor z2 es " << solucionGral[2] << endl;
 
 
         int k = 0;
@@ -2176,6 +2181,7 @@ int main(int argc, char** argv)
 
         int sol_no_accept;
         int sol_add;
+        int s_entra;
         vector <float> valorFuncEval {0, 0, 0};
         vector <float> sol_error {-1, -1, -1};
 
@@ -2406,6 +2412,7 @@ int main(int argc, char** argv)
                 sCandidateR = sCandidate[2];
                 sol_add = 0;
                 sol_no_accept = 0;
+                s_entra = 1;
                 //cout << "s candidate es " << sCandidate[0] << endl;
                 //cout << "s[1] es " << sCandidate[1] << endl;
                 //cout << "s[2] es " << sCandidate[2] << endl;
@@ -2428,6 +2435,7 @@ int main(int argc, char** argv)
                         //cout << "dps de for " << endl;
                         //cout << "Comparando con " << sols_arc[i][0] << " " << sols_arc[i][1] << endl;
                         //cout << "sCandidate " << sCandidate[1] << " " << sCandidate [2] << endl;
+                        //cout << "largo es " << sols_arc.size() << endl;
                         if (solucion_dominante(sols_arc[i], sCandidate) == 1){ //Scandidate domina
                             //cout << "antes del reemplazo " << endl;
                             //cout << "valor 1  es " << sols_arc[i][0] << endl; 
@@ -2437,21 +2445,25 @@ int main(int argc, char** argv)
                             if (sol_add){ //Si sCandidate ya fue agregado, solo eliminar a solucion a la que domina
                                 //cout << "quitando " << sols_arc[i][0] << " " << sols_arc[i][1] << endl;
                                 sols_arc.erase(sols_arc.begin() + i);
-                            }
+                                                            }
                             else{  //Reemplazar la solucion actual por sCandidate
                                 //vector <float> s_replace {sCandidate[1], sCandidate[2]};        
-                                sols_arc.erase(sols_arc.begin() + i);
+                                
 
                                 //std::replace (sols_arc.begin(), sols_arc.end(), sols_arc[i], s_replace);
                                 vector <float> sol_arc {sCandidate[1], sCandidate[2]};
                                 if (std::find(sols_arc.begin(), sols_arc.end(), sol_igual) != sols_arc.end()){ //ya esta en el vector la sol
                                     continue;
+                                    sols_arc.erase(sols_arc.begin() + i);
                                 }
                                 else{
+                                    sols_arc.erase(sols_arc.begin() + i);
                                     sols_arc.push_back(sol_arc);    
+                                    //cout << "Agregando aqui ret1 " << sCandidate[1] << " " << sCandidate [2] << endl;
+                                    i = i - 1;
                                 }
                                 
-                                //cout << "Agregando aqui " << sCandidate[1] << " " << sCandidate [2] << endl;
+                                
                                 sol_add = 1; 
                             }
                             
@@ -2468,10 +2480,12 @@ int main(int argc, char** argv)
                             sol_no_accept = 1;
 
                             //cout << "no es dom  " << endl;
-                            i = sols_arc.size() + 1;
-                            break;
+                            
+                            s_entra = 0;
+                            //break;
                         }
-                        else if (solucion_dominante(sols_arc[i], sCandidate) == 0){ //ninguna domina a otra
+                        /*else if (solucion_dominante(sols_arc[i], sCandidate) == 0){ //ninguna domina a otra
+
                             
                             if (sol_add){ //Si sCandidate ya fue agregado, solo eliminar a solucion a la que domina
                                 continue;
@@ -2489,6 +2503,18 @@ int main(int argc, char** argv)
                                 //cout << "nd Agregando " << sCandidate[1] << " " << sCandidate [2] << endl;
                                 sol_add = 1;
                             }
+                        }*/
+
+                    }
+                    if (sol_no_accept == 0){
+                            //cout << "ocurre" << endl;
+                        if (std::find(sols_arc.begin(), sols_arc.end(), sol_igual) != sols_arc.end()){
+                            continue;
+                        }
+                        else{
+                            vector <float> sol_arc {sCandidate[1], sCandidate[2]};
+                            //cout << "Agregando aqui " << sCandidate[1] << " " << sCandidate [2] << endl;
+                            sols_arc.push_back(sol_arc);
                         }
                     }
                 }
@@ -2503,13 +2529,14 @@ int main(int argc, char** argv)
 
             its = its + 1;
         }
+
         cout << "Resultados: " << endl;
         for (i = 0; i < sols_arc.size(); i++){
             cout << "Z1: " << sols_arc[i][0] << endl;
             cout << "Z2: " << sols_arc[i][1] << endl;
             cout << "----------------------" << endl;
         }
-
+        
         //vector<float> s_final;
         //s_final = funcion_evaluacion(aux_camiones, v, nodos, clientes, 
         //                            alpha, materiales, indexDepot);
@@ -2655,7 +2682,27 @@ int main(int argc, char** argv)
         //FIN LECTURA DEL ARCHIVO POR ZONA 
 
         //for */
+
+        printf("Tiempo del alfa: %.2fs\n", (double)(clock() - t_alfa)/CLOCKS_PER_SEC);
+        cout << "                                           " << endl;
+        cout << "                                           " << endl;
     }
+    string outputName = fileToTest.substr(27,5) + "-output.txt";
+    cout << "outputname: " << outputName << endl;
+    ofstream out(outputName);
+    out << "#" << endl;
+    cout << "Resultados: " << endl;
+    for (i = 0; i < sols_arc.size(); i++){
+        //cout << "Z1: " << sols_arc[i][0] << endl;
+        //cout << "Z2: " << sols_arc[i][1] << endl;
+        //cout << "----------------------" << endl;
+        out << sols_arc[i][0] << " "<< sols_arc[i][1] << endl;
+    }   
+    out << "#" << endl;
+    out.close();
+
+    printf("Tiempo total: %.2fs\n", (double)(clock() - t_total)/CLOCKS_PER_SEC);
+
     return 0;
 }
 
