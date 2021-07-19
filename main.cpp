@@ -2688,15 +2688,14 @@ int main(int argc, char** argv)
         cout << "                                           " << endl;
     }
     string outputName = fileToTest.substr(27,5) + "-output.txt";
-    cout << "outputname: " << outputName << endl;
+    cout << "Nombre del archivo de salida: " << outputName << endl;
     ofstream out(outputName);
     out << "#" << endl;
-    cout << "Resultados: " << endl;
     for (i = 0; i < sols_arc.size(); i++){
         //cout << "Z1: " << sols_arc[i][0] << endl;
         //cout << "Z2: " << sols_arc[i][1] << endl;
         //cout << "----------------------" << endl;
-        out << sols_arc[i][0] << " "<< sols_arc[i][1] << endl;
+        out << sols_arc[i][1] << " "<< sols_arc[i][0] << endl;
     }   
     out << "#" << endl;
     out.close();
