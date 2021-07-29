@@ -15,28 +15,41 @@ using namespace std;
 
 int seed;
 
-vector<vector<vector<int>>> matrizCostosRiesgos;
+vector<vector<vector<vector<int>>>> matrizCostosRiesgos;
 
-void createMatriz(vector<vector<vector<int>>>& matriz , int n){
-    int i, j, k;
+void createMatriz(vector<vector<vector<vector<int>>>>& matriz , int n, int int_cantidadAlphas){
+    int a, i, j, k;
     int cant_matriz = 6;
 
     vector<int> aux_row;
     vector<vector<int>> aux_matriz; 
+    vector<vector<vector<int>>> aux_alfa;
 
-    for (i = 0; i < cant_matriz; i++){
-        aux_matriz.clear();
-        for (j = 0; j < n; j++){
-            aux_row.clear();
-            for (k = 0; k < n; k++){
-                aux_row.push_back(-1);
+    for (a = 0; a < int_cantidadAlphas; a++){
+        aux_alfa.clear();
+        for (i = 0; i < cant_matriz; i++){
+            aux_matriz.clear();
+            for (j = 0; j < n; j++){
+                aux_row.clear();
+                for (k = 0; k < n; k++){
+                    aux_row.push_back(-1);
+                }
+                aux_matriz.push_back(aux_row);
             }
-            aux_matriz.push_back(aux_row);
+            aux_alfa.push_back(aux_matriz);
         }
-        matriz.push_back(aux_matriz);
+        matriz.push_back(aux_alfa);
     }
 }
 
+
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
 
 // Clase Nodo
 
@@ -115,7 +128,7 @@ public:
 // vertex to the destination vertex
 vector<float> dijkstraDist(
     vector<Node*> g,
-    int s, vector<int>& path, int posLenghtOrRi)
+    int s, vector<float>& path, int posLenghtOrRi)
 {
     // Stores distance of each
     // vertex from source vertex
@@ -163,7 +176,6 @@ vector<float> dijkstraDist(
                 dist[v] = alt;
                 path[v] = current;
 
-
             }
         }
         sett.erase(current);
@@ -190,6 +202,116 @@ vector<float> dijkstraDist(
 
 /* FIN DIJKSTRAS*/
 
+
+vector<vector<float>> dijkstraRiskDist(
+    vector<Node*> g,
+    int s, vector<float>& path, int posLenghtOrRi, float alpha)
+{
+    // Stores distance of each
+    // vertex from source vertex
+    vector<float> distRisk(g.size());
+
+    vector<float> dist(g.size());
+    vector<float> risk(g.size());
+
+    vector<int> ruta;
+ 
+    //cout << "valor de alfa dentro de la f es " << alpha << endl; 
+    // Boolean array that shows
+    // whether the vertex 'i'
+    // is visited or not
+    bool visited[g.size()];
+    for (int i = 0; i < g.size(); i++) {
+        visited[i] = false;
+        path[i] = -1;
+        distRisk[i] = infi;
+        dist[i] = infi;
+        risk[i] = infi;
+    }
+    distRisk[s] = 0;
+    dist[s] = 0;
+    risk[s] = 0;
+
+    path[s] = -1;
+    int current = s;
+ 
+    // Set of vertices that has
+    // a parent (one or more)
+    // marked as visited
+    unordered_set<int> sett;
+    while (true) {
+        // Mark current as visited
+        visited[current] = true;
+        for (int i = 0;
+             i < g[current]->children.size();
+             i++) {
+            int v = g[current]->children[i][0];
+            if (visited[v])
+                continue;
+ 
+            // Inserting into the
+            // visited vertex
+            sett.insert(v);
+            float alt
+                = distRisk[current]
+                  + g[current]->children[i][1] * alpha              //DISTANCIA
+                  + g[current]->children[i][posLenghtOrRi] * (1-alpha); //RIESGO
+
+            float dist_alt = dist[current] + g[current]->children[i][1];
+            float risk_alt = risk[current] + g[current]->children[i][posLenghtOrRi];
+            
+
+            // Condition to check the distance
+            // is correct and update it
+            // if it is minimum from the previous
+            // computed distance
+            if (alt < distRisk[v]) {
+                distRisk[v] = alt;
+                path[v] = current;
+
+                dist[v] = dist_alt;
+                risk[v] = risk_alt;
+
+            }
+        }
+        sett.erase(current);
+        if (sett.empty())
+            break;
+ 
+        // The new current
+        float minDist = infi;
+        int index = 0;
+ 
+        // Loop to update the distance
+        // of the vertices of the graph
+        for (int a: sett) {
+            if (distRisk[a] < minDist) {
+                minDist = distRisk[a];
+                index = a;
+            }
+        }
+        current = index;
+    }
+    return {distRisk, dist, risk};
+}
+
+void printPath(vector<float> path,
+               int i, int s)
+{
+    if (i != s) {
+ 
+        // Condition to check if
+        // there is no path between
+        // the vertices
+        if (path[i] == -1) {
+            cout << "Path not found!!";
+            return;
+        }
+        printPath(path, path[i], s);
+        cout << path[i] << " ";
+    }
+}
+ 
 
 int letra_to_pos(string letra, vector<string> materiales){
         unsigned co;
@@ -374,7 +496,7 @@ int solucionGreedyListaAzar(vector<Truck*> &camiones, vector<Cliente*> &clientes
     int idClient, idClientA, idClientB;
     int idTruck;
 
-    vector<int> path(v.size());
+    vector<float> path(v.size());
 
     //cout << "index depot es " << indexDepot << endl;
     //alpha = 0.5;
@@ -422,16 +544,12 @@ int solucionGreedyListaAzar(vector<Truck*> &camiones, vector<Cliente*> &clientes
                 std::vector<int>::iterator itB = std::find(vector_clientes.begin(), vector_clientes.end(), idClient);
                 int posB = std::distance(vector_clientes.begin(), itB);
 
-                if (matrizCostosRiesgos[0][posA][posB] != -1){
-                    z_distancias = z_distancias + matrizCostosRiesgos[0][posA][posB];
-                }
+                
+                vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);    
+                z_distancias = z_distancias + distancias[indexClient];
 
-                else{
-                    vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);    
-                    z_distancias = z_distancias + distancias[indexClient];
-                    matrizCostosRiesgos[0][posA][posB] = distancias[indexClient];
-                    //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
-                }
+                //cout << "matrizCostosRiesgos[i_alpha][0][posA][posB] es: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                
                 
                 //z_distancias = z_distancias + distancias[indexDepot];
                 //tengo IndexDepot e indexClient
@@ -546,22 +664,9 @@ int solucionGreedyListaAzar(vector<Truck*> &camiones, vector<Cliente*> &clientes
                     //cout << "cae aca " << endl;
                     clientes[indexClient]->cantidad = 0;
 
-
-                    std::vector<int>::iterator itA = std::find(vector_clientes.begin(), vector_clientes.end(), idClientA);
-                    int posA = std::distance(vector_clientes.begin(), itA);
-
-                    std::vector<int>::iterator itB = std::find(vector_clientes.begin(), vector_clientes.end(), idClientB);
-                    int posB = std::distance(vector_clientes.begin(), itB);
-
-                    if (matrizCostosRiesgos[0][posA][posB] != -1){
-                        z_distancias = z_distancias + matrizCostosRiesgos[0][posA][posB];
-                    }
-
-                    else{
-                        z_distancias = z_distancias + distancias[posi];
-                        matrizCostosRiesgos[0][posA][posB] = distancias[posi];
-                        //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
-                    }
+                    z_distancias = z_distancias + distancias[posi];
+                    //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
+                    
                 }
                 
             }
@@ -591,7 +696,7 @@ int solucionGreedyAzar(vector<Truck*> &camiones, vector<Cliente*> &clientes, vec
     int idClient, idClientA, idClientB;
     int idTruck;
 
-    vector<int> path(v.size());
+    vector<float> path(v.size());
 
     //cout << "index depot es " << indexDepot << endl;
 
@@ -629,29 +734,13 @@ int solucionGreedyAzar(vector<Truck*> &camiones, vector<Cliente*> &clientes, vec
 
                 cantidad_total = cantidad_total - clientes[indexClient]->cantidad;
                 clientes[indexClient]->cantidad = 0;
-
-                vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);
                 
-
                 //z_distancias = z_distancias + distancias[indexDepot];
+                
+                vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);    
                 z_distancias = z_distancias + distancias[indexClient];
-
-                std::vector<int>::iterator itA = std::find(vector_clientes.begin(), vector_clientes.end(), 22821);
-                int posA = std::distance(vector_clientes.begin(), itA);
-
-                std::vector<int>::iterator itB = std::find(vector_clientes.begin(), vector_clientes.end(), idClient);
-                int posB = std::distance(vector_clientes.begin(), itB);
-
-                if (matrizCostosRiesgos[0][posA][posB] != -1){
-                    z_distancias = z_distancias + distancias[indexClient];
-                }
-
-                else{
-                    vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);    
-                    z_distancias = z_distancias + distancias[indexClient];
-                    matrizCostosRiesgos[0][posA][posB] = distancias[indexClient];
-                    //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
-                }
+                //cout << "matrizCostosRiesgos[i_alpha][0][posA][posB] es: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                
             }
         }
 
@@ -704,23 +793,12 @@ int solucionGreedyAzar(vector<Truck*> &camiones, vector<Cliente*> &clientes, vec
                     cantidad_total = cantidad_total - clientes[indexClient]->cantidad;
                     //cout << "cae aca " << endl;
                     clientes[indexClient]->cantidad = 0;
-
-                    std::vector<int>::iterator itA = std::find(vector_clientes.begin(), vector_clientes.end(), idClientA);
-                    int posA = std::distance(vector_clientes.begin(), itA);
-
-                    std::vector<int>::iterator itB = std::find(vector_clientes.begin(), vector_clientes.end(), idClientB);
-                    int posB = std::distance(vector_clientes.begin(), itB);
-
-                    if (matrizCostosRiesgos[0][posA][posB] != -1){
-                        z_distancias = z_distancias + matrizCostosRiesgos[0][posA][posB];
-                    }
-
-                    else{
-                        vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);    
-                        z_distancias = z_distancias + distancias[posi];
-                        matrizCostosRiesgos[0][posA][posB] = distancias[posi];
-                        //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
-                    }
+                    
+                    vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);    
+                    z_distancias = z_distancias + distancias[posi];
+                    
+                    //cout << "matrizCostosRiesgos[i_alpha][0][posA][posB] es: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                    
                 }
                 
             }
@@ -750,7 +828,7 @@ int solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<
     int idClient, idClientA, idClientB;
     int idTruck;
 
-    vector<int> path(v.size());
+    vector<float> path(v.size());
 
     //cout << "index depot es " << indexDepot << endl;
 
@@ -791,22 +869,25 @@ int solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<
 
                 //z_distancias = z_distancias + distancias[indexDepot];
 
-                std::vector<int>::iterator itA = std::find(vector_clientes.begin(), vector_clientes.end(), 22821);
-                int posA = std::distance(vector_clientes.begin(), itA);
+                vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);    
+                z_distancias = z_distancias + distancias[indexClient];
+                    
 
-                std::vector<int>::iterator itB = std::find(vector_clientes.begin(), vector_clientes.end(), idClient);
-                int posB = std::distance(vector_clientes.begin(), itB);
 
-                if (matrizCostosRiesgos[0][posA][posB] != -1){
-                    z_distancias = z_distancias + matrizCostosRiesgos[0][posA][posB];
-                }
+                    //std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), 22821);
+                    //posA = std::distance(nodos.begin(), itA);
 
-                else{
-                    vector<float> distancias = dijkstraDist(v, indexDepot, path, 1);    
-                    z_distancias = z_distancias + distancias[indexClient];
-                    matrizCostosRiesgos[0][posA][posB] = distancias[indexClient];
-                    //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
-                }
+                    //itB = std::find(nodos.begin(), nodos.end(), idClient);
+                    //posB = std::distance(nodos.begin(), itB);
+                    //printPath(path, posB, posA);
+                    //cout << endl;
+                    //cout << "Del cliente depot al cliente: " << idClient << endl;
+
+                    //cout << "distancias es " << distancias[posB] << endl;
+                    //cout << "posb es " << posB << endl;
+                    //cout << "nodo " << nodos[25] << endl;
+                    //cout << "matrizCostosRiesgos[i_alpha][0][posA][posB] es: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                
             }
         }
 
@@ -862,14 +943,11 @@ int solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<
                 }
                 //cout << "valor de j es " << indexClient << endl;
 
-                if (matrizCostosRiesgos[0][posA][posB] != -1){
-                    z_distancias = z_distancias + matrizCostosRiesgos[0][posA][posB];
-                }
 
-                else{
-                    z_distancias = z_distancias + distancias[posi];            
-                    matrizCostosRiesgos[0][posA][posB] = distancias[posi];   
-                }
+                
+                z_distancias = z_distancias + distancias[posi];            
+                  
+                
 
                 camiones[indexTruck]->clientes.push_back(idClientB);   //agregar cliente
                 mat_client = clientes[indexClient]->material;         //obtener material del cliente
@@ -888,7 +966,7 @@ int solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<
                 clientes[indexClient]->cantidad = 0;
 
 
-                //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
+                //cout << "matrizCostosRiesgos[i_alpha][0][posA][posB] es: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
                 //cout << "aqui " << endl; 
                 //cout << "nodo actual " << indexClient << endl;
             }
@@ -907,7 +985,8 @@ int solucionGreedy(vector<Truck*> &camiones, vector<Cliente*> &clientes, vector<
 
 
 vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes,
-                                    vector <int> vector_clientes, float alpha, vector<string> materiales, int indexDepot){
+                                    vector <int> vector_clientes, float alpha, vector<string> materiales, int indexDepot,
+                                    int i_alpha){
 
     vector <float> sol_error {-1, -1, -1};
     if (t.size() == 0){
@@ -918,7 +997,7 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
     float z1 = 0.0;
     float z2 = 0.0;
 
-    vector<int> path(v.size());
+    vector<float> path(v.size());
     //cout << "valor de alpha en fe" << alpha << endl;
     vector<float> vectorZ;
 
@@ -958,6 +1037,7 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
 
     //DEPOT AL PRIMER NODO
     for (i = 0; i < t.size(); i ++){
+        //cout << "Para el camión " << t[i]->id << endl;
         if (t[i]->clientes.size() > 0){
 
             auxCargados = t[i]->cargados;
@@ -980,21 +1060,41 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
             std::vector<int>::iterator itB = std::find(vector_clientes.begin(), vector_clientes.end(), idClient);
             int posB = std::distance(vector_clientes.begin(), itB);
 
-            if (matrizCostosRiesgos[0][posA][posB] != -1 && matrizCostosRiesgos[intMaterial+1][posA][posB] != -1){
-                z1 = z1 + matrizCostosRiesgos[0][posA][posB];
-                z2 = z2 + matrizCostosRiesgos[intMaterial+1][posA][posB];
+            //cout << "Cliente: " << idClient << endl;
+
+            if (matrizCostosRiesgos[i_alpha][0][posA][posB] != -1 && matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] != -1){
+                z1 = z1 + matrizCostosRiesgos[i_alpha][0][posA][posB];
+                z2 = z2 + matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB];
+
+                //cout << "En costos se le suma: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                //cout << "En riesgos se le suma: " << matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] << endl;
+                //cout << "mat dom en fe segun funcion es " << t[i]->mat_dom << endl;
             }
 
             else{
-                vector<float> pesosDistancias = dijkstraDist(v, indexDepot, path, 1);            //el 1 es para obtener los minimos de lontigud
-                vector<float> pesosRiesgos = dijkstraDist(v, indexDepot, path, intMaterial + 2); //el +2 es porque retorna numero del 0 al 5  
+
+                vector<vector<float>> pesosTotales = dijkstraRiskDist(v,indexDepot, path, intMaterial + 2, alpha);
+                vector<float> pesosResultados = pesosTotales[0];
+                vector<float> pesosDistancias = pesosTotales[1];
+                vector<float> pesosRiesgos = pesosTotales[2];
+                //vector<float> pesosDistancias = dijkstraRiskDist(v, indexDepot, path, 1, alpha)[1];            //el 1 es para obtener los minimos de lontigud
+                //vector<float> pesosRiesgos = dijkstraRiskDist(v, indexDepot, path, intMaterial + 2, alpha)[2]; //el +2 es porque retorna numero del 0 al 5  
+
+
+                //vector<int> rutaDijkstra = dijkstraRiskDist(v, indexDepot, path, intMaterial + 2, alpha); //el +2 es porque retorna numero del 0 al 5  
+
+
                 z1 = z1 + pesosDistancias[indexClient];
                 z2 = z2 + pesosRiesgos[indexClient];
 
-                matrizCostosRiesgos[0][posA][posB] = pesosDistancias[indexClient];
-                matrizCostosRiesgos[intMaterial+1][posA][posB] = pesosRiesgos[indexClient];
-                //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
-                //cout << "matrizCostosRiesgos[intMaterial+1][posA][posB] es: " << matrizCostosRiesgos[intMaterial+1][posA][posB] << endl;
+                matrizCostosRiesgos[i_alpha][0][posA][posB] = pesosDistancias[indexClient];
+                matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] = pesosRiesgos[indexClient];
+
+                //cout << "En costos se le suma: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                //cout << "En riesgos se le suma: " << matrizCostosRiesgos[intMaterial+1][posA][posB] << endl;
+                //cout << "mat dom en fe segun funcion es " << t[i]->mat_dom << endl;
+                //cout << "matrizCostosRiesgos[i_alpha][0][posA][posB] es: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                //cout << "matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] es: " << matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] << endl;
             }
             //cout << "distancia " << pesosDistancias[indexClient] << endl;
             //cout << "riesgos " << pesosRiesgos[indexClient] << endl;
@@ -1004,15 +1104,18 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
 
     //ENTRE NODOS
     for (i = 0; i < t.size(); i++){
+        //cout << "ultimo nodo del c" << i+1 << " " << t[i]->clientes[t[i]->clientes.size()-1] << endl;
+        //cout << "Para el camión " << t[i]->id << endl;
         //cout << "error " << endl;
         //cout << "t.size " << endl;
         if (t[i]->clientes.size() > 0){  //si el camion tiene clientes
             //cout << "error 2" << endl;
             auxClientesTruck = t[i]->clientes;
             auxCargados = t[i]->cargados;
-            auxCargados.erase(auxCargados.begin());
+            //auxCargados.erase(auxCargados.begin());
+            //auxClientesTruck.erase(auxClientesTruck.begin());
             //cout << "id camion " << i << endl; 
-            while (auxCargados.size() >= 1 && auxClientesTruck.size() >= 1){    
+            while (auxCargados.size() >= 2 && auxClientesTruck.size() >= 2){    
                 t[i]->mat_dom = actualizar_dominante(auxCargados, materiales);
                 intMaterial = letra_to_pos(t[i]->mat_dom, materiales);
                 /*vector<int> dist
@@ -1024,6 +1127,8 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
 
                 idClientA = auxClientesTruck[j];
                 idClientB = auxClientesTruck[j+1];
+
+                //cout << "Del cliente: " << idClientA << " al cliente " << idClientB << endl;
                 
                 //cambiar dikstra por la pos del idclient a
 
@@ -1036,10 +1141,12 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
                 
                 
                 auxClientesTruck.erase(auxClientesTruck.begin());
+
+                //cout << "largo es " << auxClientesTruck.size() << endl;
                 
                 auxCargados.erase(auxCargados.begin());
 
-
+                //cout << "cargados largo es " << auxCargados.size() << endl;
 
                 itA = std::find(vector_clientes.begin(), vector_clientes.end(), idClientA);
                 int posA = std::distance(vector_clientes.begin(), itA);
@@ -1048,21 +1155,33 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
                 int posB = std::distance(vector_clientes.begin(), itB);
 
 
-                if (matrizCostosRiesgos[0][posA][posB] != -1 && matrizCostosRiesgos[intMaterial+1][posA][posB] != -1){
-                    z1 = z1 + matrizCostosRiesgos[0][posA][posB];
-                    z2 = z2 + matrizCostosRiesgos[intMaterial+1][posA][posB];
+                if (matrizCostosRiesgos[i_alpha][0][posA][posB] != -1 && matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] != -1){
+                    z1 = z1 + matrizCostosRiesgos[i_alpha][0][posA][posB];
+                    z2 = z2 + matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB];
+
+                    //cout << "En costos se le suma: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                    //cout << "Usando matriz en riesgos se le suma: " << matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] << endl;
+                    //cout << "mat dom en fe segun funcion es " << t[i]->mat_dom << endl;
                 }
 
                 else{
-                    vector<float> pesosDistancias = dijkstraDist(v, indexClientA, path, 1);            //el 1 es para obtener los minimos de lontigud
-                    vector<float> pesosRiesgos = dijkstraDist(v, indexClientA, path, intMaterial + 2); //el +2 es porque retorna numero del 0 al 5 
+                    vector<vector<float>> pesosTotales = dijkstraRiskDist(v,indexDepot, path, intMaterial + 2, alpha);
+                    vector<float> pesosResultados = pesosTotales[0];
+                    vector<float> pesosDistancias = pesosTotales[1];
+                    vector<float> pesosRiesgos = pesosTotales[2];
+                    //vector<float> pesosDistancias = dijkstraRiskDist(v, indexClientA, path, 1, alpha)[1];            //el 1 es para obtener los minimos de lontigud
+                    //vector<float> pesosRiesgos = dijkstraRiskDist(v, indexClientA, path, intMaterial + 2, alpha)[2]; //el +2 es porque retorna numero del 0 al 5 
                     z1 = z1 + pesosDistancias[indexClientB];
                     z2 = z2 + pesosRiesgos[indexClientB];
 
-                    matrizCostosRiesgos[0][posA][posB] = pesosDistancias[indexClientB];
-                    matrizCostosRiesgos[intMaterial+1][posA][posB] = pesosRiesgos[indexClientB];
-                    //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
-                    //cout << "matrizCostosRiesgos[intMaterial+1][posA][posB] es: " << matrizCostosRiesgos[intMaterial+1][posA][posB] << endl;
+                    matrizCostosRiesgos[i_alpha][0][posA][posB] = pesosDistancias[indexClientB];
+                    matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] = pesosRiesgos[indexClientB];
+
+                    //cout << "En costos se le suma: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                    //cout << "En riesgos se le suma: " << matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] << endl;
+                    //cout << "mat dom en fe segun funcion es " << t[i]->mat_dom << endl;
+                    //cout << "matrizCostosRiesgos[i_alpha][0][posA][posB] es: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                    //cout << "matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] es: " << matrizCostosRiesgos[i_alpha][intMaterial+1][posA][posB] << endl;
                 }                
                 //borrar el primero de auxclientes
                 //cout << "distancias " << pesosDistancias[indexClientB] << endl;
@@ -1076,6 +1195,8 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
                 std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), idClientA);
                 indexClientA = std::distance(nodos.begin(), itA);
 
+                //cout << "Cliente final: " << idClientA << endl;
+
                 //z1 = z1 + pesosDistancias[indexDepot]; 
 
                 itA = std::find(vector_clientes.begin(), vector_clientes.end(), idClientA);
@@ -1084,16 +1205,31 @@ vector <float> funcion_evaluacion(vector<Truck*> t, vector<Node*> v, vector<int>
                 std::vector<int>::iterator itB = std::find(vector_clientes.begin(), vector_clientes.end(), 22821);
                 int posB = std::distance(vector_clientes.begin(), itA);
 
-                if (matrizCostosRiesgos[0][posA][posB] != -1){
-                    z1 = z1 + matrizCostosRiesgos[0][posA][posB];
+                if (matrizCostosRiesgos[i_alpha][0][posA][posB] != -1){
+                    z1 = z1 + matrizCostosRiesgos[i_alpha][0][posA][posB];
+
+                    //cout << "En costos se le suma: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
                 }
 
                 else{
-                    vector<float> pesosDistancias = dijkstraDist(v, indexClientA, path, 1);            //el 1 es para obtener los minimos de lontigud
+                    vector<vector<float>> pesosTotales = dijkstraRiskDist(v, indexClientA, path, intMaterial + 2, alpha);
+
+                    vector<float> pesosDistAux = dijkstraDist(v,indexClientA, path, 1);
+
+                    //cout << "pesos dist aux es " << pesosDistAux[indexDepot] << endl;
+
+                    vector<float> pesosResultados = pesosTotales[0];
+                    vector<float> pesosDistancias = pesosTotales[1];
+                    vector<float> pesosRiesgos = pesosTotales[2];
+                    //vector<float> pesosDistancias = dijkstraRiskDist(v, indexClientA, path, 1, alpha)[1];            //el 1 es para obtener los minimos de lontigud
                     z1 = z1 + pesosDistancias[indexDepot];
 
-                    matrizCostosRiesgos[0][posA][posB] = pesosDistancias[indexDepot];
-                    //cout << "matrizCostosRiesgos[0][posA][posB] es: " << matrizCostosRiesgos[0][posA][posB] << endl;
+                    matrizCostosRiesgos[i_alpha][0][posA][posB] = pesosDistancias[indexDepot];
+
+                    //cout << "pesos distancias es " << pesosDistancias[indexDepot] << endl;
+
+                    //cout << "En costos se le suma: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
+                    //cout << "matrizCostosRiesgos[i_alpha][0][posA][posB] es: " << matrizCostosRiesgos[i_alpha][0][posA][posB] << endl;
                 }                 
                 //cout << "distancias " << pesosDistancias[indexDepot] << endl;
             }
@@ -1189,7 +1325,7 @@ vector <Truck*> movInsert(vector<Truck*> camiones, vector<Node*> v, vector<int> 
 
 vector <float> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes,
                         vector<int> vector_clientes, float alpha, vector<string> materiales, int indexDepot, 
-                        int c1, int i, int k){
+                        int c1, int i, int k, int i_alpha){
 
     //cout << "MOVIMIENTO 2-OPT" << endl;
 
@@ -1269,7 +1405,7 @@ vector <float> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
     if (vector_compatible(camiones[c1]->cargados, materiales)){
         //cout << "valor de alpha es " << alpha << endl;
         valorFuncEval = funcion_evaluacion(camiones, v, nodos, clientes, vector_clientes,
-                                alpha, materiales, indexDepot);    
+                                alpha, materiales, indexDepot, i_alpha);    
     }
     else{
         valorFuncEval = sol_error;
@@ -1432,7 +1568,7 @@ vector <Truck*> aplicarMov2Opt(vector <Truck*> camiones, int c1, int i, int k){
 
 vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, float alpha, 
                                 vector<int> vector_clientes, vector<string> materiales, int indexDepot, int tipoMov, 
-                                int c1, int c2, int pos1, int pos2){
+                                int c1, int c2, int pos1, int pos2, int i_alpha){
 
     //RECORDAR QUE ESTA FUNCION DEBE RECIBIR AUX
 
@@ -1467,7 +1603,7 @@ vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vec
 
 
     solucionantes = funcion_evaluacion(camiones, v, nodos, clientes, vector_clientes, alpha,
-                                    materiales, indexDepot);
+                                    materiales, indexDepot, i_alpha);
 
     for (i = 0; i < camiones[c1]->clientes.size(); i++){
         for (k = i+1; k <= camiones[c1]->clientes.size(); k++){
@@ -1482,7 +1618,7 @@ vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vec
             }
             else{
                 solS_n = mov2Opt(camiones, v, nodos, clientes, vector_clientes,
-                                alpha, materiales, indexDepot, c1, i, k); //ESTO FUNCIONA BIEN, NO MODIFICA AL VECTOR    
+                                alpha, materiales, indexDepot, c1, i, k, i_alpha); //ESTO FUNCIONA BIEN, NO MODIFICA AL VECTOR    
 
                 if (solS_n[0] < min){
                     //cout << "Z: " << solS_n[0] << endl;
@@ -1589,12 +1725,15 @@ int solucion_dominante(vector<float> sol_arc, vector<float> sCandidate){
 int main(int argc, char** argv)
 {
     clock_t t_total = clock();
+    clock_t t_greedy = clock();
     int i;
     string fileToTest = argv[6];
     int i_alpha;
     //vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
     //vector<float> alphas {1};
     float cantidad_alphas = atof(argv[2]);
+
+    int int_cantidadAlphas = atoi(argv[2]);
 
     vector<float> alphas;
 
@@ -1613,484 +1752,491 @@ int main(int argc, char** argv)
 
     float alpha;
     vector<vector<float>> sols_arc;
+    
+
+    ifstream in("hazmat.txt");
+
+    if(!in) {
+        cout << "No se puede abrir el archivo.\n";
+        return 1;
+    }
+
+    vector<int> id_arco;
+    vector<int> nodosA;
+    vector<int> nodosB;
+    vector<string> arcos;
+    vector<float> longitud;
+    vector<float> R1;
+    vector<float> R2;
+    vector<float> R3;
+    vector<float> R4;
+    vector<float> R5;
+
+    vector <int> nodos;
+
+    char str[255];
+    
+    i = 0;
+
+    vector<Node*> v;
+    vector<Truck*> t;
+    
+    //Lectura archivo grande
+    while(in) {
+        in.getline(str, 255); 
+        if(in){
+            
+
+            std::vector<std::string> out;
+            tokenize(str,'\t', out);
+            
+            for (auto &line: out) {         
+
+                if (i == 0){ //ID ARCO
+                    id_arco.push_back(std::stoi(line));
+                    i++;
+                }
+                else if (i == 1){ //ID DEL NODO DESTINO
+                    nodosA.push_back(std::stoi(line));
+                    i++;
+                }
+                else if (i == 2){ //ID DEL NODO ORIGEN
+                    nodosB.push_back(std::stoi(line));
+                    i++;
+                }
+                else if (i == 3){
+                    arcos.push_back(line);
+                    i++;
+                }
+                else if (i == 4){
+                    replace(line, ",", ".");
+                    longitud.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 5){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R1.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 6){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R2.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 7){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R3.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 8){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R4.push_back(std::stof(line));
+                    i++;
+                }
+                else if (i == 9){
+                    line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
+                    R5.push_back(std::stof(line));
+                    i = 0;
+                }
+            }
+        } 
+    }
+    in.close();
+
+    //LECTURA DE NODOS
+    ifstream in2("nodes.txt");
+
+    if(!in2) {
+        cout << "No se puede abrir el archivo.\n";
+        return 1;
+    }
+    int j = 0;
+    while(in2) {
+        in2.getline(str, 255); 
+        if(in2){
+            //cout << "str " << str << endl;        
+            std::vector<std::string> out;
+            tokenize(str,'\t', out);
+            for (auto &line: out) {
+                line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
+                nodos.push_back(std::stoi(line));
+                Node *a = new Node(std::stoi(line));
+                v.push_back(a);
+                //cout << "Número es: " << line << endl;
+            }
+        }
+    } 
+    
+    in2.close();
+
+    /*FIN LECTURA DE NODOS*/
+
+    //Agregar vecinos a cada nodo
+    for (i = 0; i < nodosB.size(); i++){
+
+        int vertexNumberA = nodosA[i];
+        int vertexNumberB = nodosB[i];
+
+        std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), vertexNumberA);
+        std::vector<int>::iterator itB = std::find(nodos.begin(), nodos.end(), vertexNumberB);
+
+        int indexA = std::distance(nodos.begin(), itA);
+        int indexB = std::distance(nodos.begin(), itB);
+        
+        v[indexA]->add_child(indexB,longitud[i], R1[i], R2[i], R3[i], R4[i], R5[i]);
+    }
+
+    int s = 1894; //Posicion del nodo, al cual se le quiere buscar caminos más cortos
+    vector<float> path(v.size());
+
+    /*vector<int> dist
+        = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5
+    //dist = arreglo de distancias de un nodo para todos    
+    
+
+    for (int i = 0; i < dist.size(); i++) {
+        if (dist[i] == infi) {
+            cout << i << " and " << s
+                 << " are not connected"
+                 << endl;
+            continue;
+        }
+        cout << "Distance of " << i
+             << "th vertex from source vertex "
+             << s << " is: "
+             << dist[i] << endl;
+    }*/
+    //for para revisar vecinos del nodo en la posicion s
+    /*for (int i = 0; i < dist.size(); i++) {
+        if (dist[i] == infi) {
+            cout << nodos[i] << " and " << 
+            nodos[s]
+                 << " are not connected" << " " << i << " a " << s 
+                 << endl;
+            continue;
+        }
+        cout << "Distance of " << nodos[i]
+             << "th vertex from source vertex "
+             << nodos[s] << " is: "
+             << dist[i] << endl;
+    }*/
+
+    //----FIN LECTURA EXCEL------
+
+    //----LEER ARCHIVOS TXT------
+
+    vector<string> archivos {"peligro-mezcla4-min-riesgo-zona1-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona2-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona3-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona4-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona5-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona6-2k-AE.3.hazmat",
+                            "peligro-mezcla4-min-riesgo-zona7-2k-AE.3.hazmat"};
+        
+    
+
+
+    
+
+
+    //LEER ARCHIVOS DE ZONAS, PARA OBTENER LOS CLIENTES
+
+    /*
+    fstream file;  
+    string nombre_archivo;
+    unsigned i_arc = 0;
+    int cont = -1;
+    string line;
+
+    vector<int> clientes;
+
+    cout << endl << endl;
+    for (i_arc = 0; i_arc < archivos.size(); i_arc++){ 
+        cont = -1;
+        int n_nodos;
+
+
+        nombre_archivo = archivos[i_arc];
+
+        ifstream myfile;
+        myfile.open(nombre_archivo);
+
+        if (!myfile.is_open()){
+            perror("Error al abrir el archivo");
+            exit(EXIT_FAILURE);
+        }
+
+        while(getline(myfile,line)){
+            cont = cont + 1;
+            if (cont == 0){
+                n_nodos = std::stoi(line);
+            }
+            else if (cont == 1){
+
+                std::vector<std::string> out;
+                tokenize(line, ' ', out);
+                for (auto &line: out) { //NODO DEPOT
+                    if (i_arc == 0){ //SOLO SE AGREGA EL NODO DEPOT UNA VEZ
+                        clientes.push_back(std::stoi(line));
+                        break;
+                    }
+                }
+
+                cont = cont + 1;
+
+                while (getline(myfile,line) && cont != n_nodos + 1){ 
+
+                    cont = cont + 1;
+                    std::vector<std::string> out;
+                    tokenize(line, ' ', out);
+                    
+                    for (auto &line: out) {
+                        clientes.push_back(std::stoi(line)); //SE AGREGAN LOS ID DE LOS CLIENTES
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    */
+
+    int vertexNumberA;
+    int vertexNumberB;
+    int indexA;
+    int indexB;
+
+    Node* nodoA;
+
+
+    //PARA EL PRIMER NODO
+    ifstream myfile;
+    //string fileToTest= "peligro-mezcla4-min-riesgo-zona7-2k-AE.3.hazmat";
+
+    //float alpha = atof(argv[2]);
+    //float alpha;
+    float maxlistatabu = atof(argv[3]);
+    int max_its = atoi(argv[4]);
+    int optionGreedy = atoi(argv[5]);
+    
+    
+    myfile.open(fileToTest);
+
+
+
+    vector<int> clientesFile;
+
+    //22821: nodo Depot
+    int n_camiones;
+    int n_nodos;
+    int cont = -1;
+    i = 0;
+    j = 0;
+    
+    vector<float> capacidades;
+    int id_truck = 0;
+    string line;
+
+
+    vector<Cliente*> clientes;
+    vector<Truck*> camiones;
+    vector<int> vector_clientes;
+
+    int clienteVertex;
+    float cantidad;
+    string material;
+    int i_arc;
+    float cantidad_total = 0;
+    if(!myfile.is_open()) {
+      perror("Error open");
+      exit(EXIT_FAILURE);
+    }
+    while(getline(myfile,line)){
+        cont = cont + 1;
+        if (cont == 0){
+            n_nodos = std::stoi(line); //cantidad de nodos
+        }
+        else if (cont >= 1 && cont < n_nodos + 1){
+            i_arc = 0;
+            std::vector<std::string> out;
+            tokenize(line, ' ', out);
+            for (auto &line: out) { 
+                
+                if (i_arc == 0){ 
+                    clienteVertex = std::stoi(line);
+                    i_arc = i_arc + 1;
+                }
+                else if (i_arc == 1){
+                    cantidad = std::stof(line);
+                    i_arc = i_arc + 1;
+                    cantidad_total = cantidad_total + cantidad;
+                }
+                else if (i_arc == 2){
+                    material = line;
+                }
+
+            }
+            Cliente *client = new Cliente(clienteVertex, cantidad, material);            
+            clientes.push_back(client);
+            vector_clientes.push_back(clienteVertex);
+        }
+        else if (cont == n_nodos + 1 ){
+            //cout << "cont es " << cont << endl; 
+            //cout << "line es " << line << endl;
+            n_camiones = std::stoi(line);
+        }  
+
+        else if (cont == n_nodos+  2){
+            int id = 0;
+            std::vector<std::string> out;
+            tokenize(line, ' ', out);
+            for (auto &line: out) { 
+                id = id + 1;
+                Truck *camion = new Truck(id, std::stof(line));
+                camiones.push_back(camion);
+            }
+        }
+        else if (cont > n_nodos + 2){
+            //cout << line << endl;            
+            break;
+        }
+
+
+    }
+
+    /*GREEDY*/
+    createMatriz(matrizCostosRiesgos, n_nodos, int_cantidadAlphas);
+
+
+    Capture_Params(argc,argv);
+    srand48(seed);
+    float prob;
+    prob = float_rand(1,clientes.size());
+    //cout << "prob es " << prob << endl;
+    int its = 0;
+    int idClient;
+    int indexClient;
+
+    int idTruck;
+    int indexTruck;
+    string mat_client;
+
+    float minimo;
+
+    vector<string> materiales;
+    materiales.push_back("A");
+    materiales.push_back("B");
+    materiales.push_back("C");
+    materiales.push_back("D");
+    materiales.push_back("E");
+
+
+    /*vector<int> dist
+        = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5
+    //dist = arreglo de distancias de un nodo para todos  */
+
+    std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), 22821); //22821 es el depot
+    int indexDepot = std::distance(nodos.begin(), itA);
+    
+    int nodo_actual;
+    int posi;
+
+    j = 0;
+
+    //v: vector clase de nodos
+    //nodos: vector entero con id nodos
+
+    //int i_alpha;
+    //vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
+    int result_greedy;
+    int flag = 1;
+
+    vector<Truck*> aux_camiones_greedy;
+    vector <Cliente*> aux_clientes_greedy;
+    
+
+    /*for (i = 0; i < camiones.size(); i++){
+        cout << "Camion " << camiones[i]->id << endl;
+        for (j = 0; j < camiones[i]->clientes.size(); j++){
+            cout << "Cliente " << camiones[i]->clientes[j] << endl;
+        }
+    }*/
+
+    //solucionGreedy(camiones, clientes, vector_clientes, v,
+    //            nodos, materiales, indexDepot, cantidad_total);
+
+    /*for (i = 0; i < camiones.size(); i++){
+        cout << "Camion " << camiones[i]->id << endl;
+        for (j = 0; j < camiones[i]->clientes.size(); j++){
+            cout << "Cliente " << camiones[i]->clientes[j] << endl;
+        }
+    }*/
+
+    while (flag){
+        seed = seed + 1;
+        srand48(seed);
+        //cout << seed << endl;
+        //aux_camiones_greedy = camiones;
+        aux_camiones_greedy.clear();
+        aux_clientes_greedy.clear();
+
+        for (i = 0; i < camiones.size(); i++){
+            Truck *camion = new Truck(camiones[i]->id, camiones[i]->capacidad);
+            aux_camiones_greedy.push_back(camion);                    
+        }
+
+        for (j = 0; j < clientes.size(); j++){
+            Cliente *client = new Cliente(clientes[j]->vertexNumber, clientes[j]->cantidad, clientes[j]->material);            
+            aux_clientes_greedy.push_back(client);
+        }
+
+        /*for (i = 0; i < aux_camiones_greedy.size(); i++){
+            cout << "Camion " << aux_camiones_greedy[i]->id << endl;
+            for (j = 0; j < aux_camiones_greedy[i]->clientes.size(); j++){
+                cout << "Cliente " << aux_camiones_greedy[i]->clientes[j] << endl;
+            }
+        }*/
+
+        if (optionGreedy == 1){
+            result_greedy = solucionGreedyAzar(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
+                        nodos, materiales, indexDepot, cantidad_total, alpha);
+        }
+        else if(optionGreedy == 2){
+            result_greedy = solucionGreedyListaAzar(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
+                        nodos, materiales, indexDepot, cantidad_total, alpha);
+        }
+        else{
+            result_greedy = solucionGreedy(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
+                        nodos, materiales, indexDepot, cantidad_total, alpha);
+        }
+
+        
+
+        cout << "----------------------------" << endl;
+
+        /*for (i = 0; i < aux_camiones_greedy.size(); i++){
+            cout << "Camion " << aux_camiones_greedy[i]->id << endl;
+            for (j = 0; j < aux_camiones_greedy[i]->clientes.size(); j++){
+            cout << "Cliente " << aux_camiones_greedy[i]->clientes[j] << endl;
+            }
+        }*/
+
+        if (result_greedy){
+            flag = 0;
+        }
+    }
+
+    cout << endl;
+
+    printf("Tiempo de algoritmo Greedy: %.2fs\n", (double)(clock() - t_greedy)/CLOCKS_PER_SEC);
+
+    cout << endl;
+
     for (i_alpha = 0; i_alpha < alphas.size(); i_alpha++){
         alpha = alphas[i_alpha];    
 
         clock_t t_alfa = clock();
  
         cout << "Para alfa: " << alpha << endl;
-    
-
-        ifstream in("hazmat.txt");
-
-        if(!in) {
-            cout << "No se puede abrir el archivo.\n";
-            return 1;
-        }
-
-        vector<int> id_arco;
-        vector<int> nodosA;
-        vector<int> nodosB;
-        vector<string> arcos;
-        vector<float> longitud;
-        vector<float> R1;
-        vector<float> R2;
-        vector<float> R3;
-        vector<float> R4;
-        vector<float> R5;
-
-        vector <int> nodos;
-
-        char str[255];
-        
-        i = 0;
-
-        vector<Node*> v;
-        vector<Truck*> t;
-        
-        //Lectura archivo grande
-        while(in) {
-            in.getline(str, 255); 
-            if(in){
-                
-
-                std::vector<std::string> out;
-                tokenize(str,'\t', out);
-                
-                for (auto &line: out) {         
-
-                    if (i == 0){ //ID ARCO
-                        id_arco.push_back(std::stoi(line));
-                        i++;
-                    }
-                    else if (i == 1){ //ID DEL NODO DESTINO
-                        nodosA.push_back(std::stoi(line));
-                        i++;
-                    }
-                    else if (i == 2){ //ID DEL NODO ORIGEN
-                        nodosB.push_back(std::stoi(line));
-                        i++;
-                    }
-                    else if (i == 3){
-                        arcos.push_back(line);
-                        i++;
-                    }
-                    else if (i == 4){
-                        longitud.push_back(std::stof(line));
-                        i++;
-                    }
-                    else if (i == 5){
-                        line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-                        R1.push_back(std::stof(line));
-                        i++;
-                    }
-                    else if (i == 6){
-                        line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-                        R2.push_back(std::stof(line));
-                        i++;
-                    }
-                    else if (i == 7){
-                        line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-                        R3.push_back(std::stof(line));
-                        i++;
-                    }
-                    else if (i == 8){
-                        line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-                        R4.push_back(std::stof(line));
-                        i++;
-                    }
-                    else if (i == 9){
-                        line.erase(std::remove(line.begin(), line.end(), '.'), line.end());
-                        R5.push_back(std::stof(line));
-                        i = 0;
-                    }
-                }
-            } 
-        }
-        in.close();
-
-        //LECTURA DE NODOS
-        ifstream in2("nodes.txt");
-
-        if(!in2) {
-            cout << "No se puede abrir el archivo.\n";
-            return 1;
-        }
-        int j = 0;
-        while(in2) {
-            in2.getline(str, 255); 
-            if(in2){
-                //cout << "str " << str << endl;        
-                std::vector<std::string> out;
-                tokenize(str,'\t', out);
-                for (auto &line: out) {
-                    line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
-                    nodos.push_back(std::stoi(line));
-                    Node *a = new Node(std::stoi(line));
-                    v.push_back(a);
-                    //cout << "Número es: " << line << endl;
-                }
-            }
-        } 
-        
-        in2.close();
-
-        /*FIN LECTURA DE NODOS*/
-
-        //Agregar vecinos a cada nodo
-        for (i = 0; i < nodosB.size(); i++){
-
-            int vertexNumberA = nodosA[i];
-            int vertexNumberB = nodosB[i];
-
-            std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), vertexNumberA);
-            std::vector<int>::iterator itB = std::find(nodos.begin(), nodos.end(), vertexNumberB);
-
-            int indexA = std::distance(nodos.begin(), itA);
-            int indexB = std::distance(nodos.begin(), itB);
-            
-            v[indexA]->add_child(indexB,longitud[i], R1[i], R2[i], R3[i], R4[i], R5[i]);
-
-        }
-
-        int s = 1894; //Posicion del nodo, al cual se le quiere buscar caminos más cortos
-        vector<int> path(v.size());
-
-        /*vector<int> dist
-            = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5
-        //dist = arreglo de distancias de un nodo para todos    
-        
-
-        for (int i = 0; i < dist.size(); i++) {
-            if (dist[i] == infi) {
-                cout << i << " and " << s
-                     << " are not connected"
-                     << endl;
-                continue;
-            }
-            cout << "Distance of " << i
-                 << "th vertex from source vertex "
-                 << s << " is: "
-                 << dist[i] << endl;
-        }*/
-        //for para revisar vecinos del nodo en la posicion s
-        /*for (int i = 0; i < dist.size(); i++) {
-            if (dist[i] == infi) {
-                cout << nodos[i] << " and " << 
-                nodos[s]
-                     << " are not connected" << " " << i << " a " << s 
-                     << endl;
-                continue;
-            }
-            cout << "Distance of " << nodos[i]
-                 << "th vertex from source vertex "
-                 << nodos[s] << " is: "
-                 << dist[i] << endl;
-        }*/
-
-        //----FIN LECTURA EXCEL------
-
-        //----LEER ARCHIVOS TXT------
-
-        vector<string> archivos {"peligro-mezcla4-min-riesgo-zona1-2k-AE.3.hazmat",
-                                "peligro-mezcla4-min-riesgo-zona2-2k-AE.3.hazmat",
-                                "peligro-mezcla4-min-riesgo-zona3-2k-AE.3.hazmat",
-                                "peligro-mezcla4-min-riesgo-zona4-2k-AE.3.hazmat",
-                                "peligro-mezcla4-min-riesgo-zona5-2k-AE.3.hazmat",
-                                "peligro-mezcla4-min-riesgo-zona6-2k-AE.3.hazmat",
-                                "peligro-mezcla4-min-riesgo-zona7-2k-AE.3.hazmat"};
-            
-        
-
-
-        
-
-
-        //LEER ARCHIVOS DE ZONAS, PARA OBTENER LOS CLIENTES
-
-        /*
-        fstream file;  
-        string nombre_archivo;
-        unsigned i_arc = 0;
-        int cont = -1;
-        string line;
-
-        vector<int> clientes;
-
-        cout << endl << endl;
-        for (i_arc = 0; i_arc < archivos.size(); i_arc++){ 
-            cont = -1;
-            int n_nodos;
-
-
-            nombre_archivo = archivos[i_arc];
-
-            ifstream myfile;
-            myfile.open(nombre_archivo);
-
-            if (!myfile.is_open()){
-                perror("Error al abrir el archivo");
-                exit(EXIT_FAILURE);
-            }
-
-            while(getline(myfile,line)){
-                cont = cont + 1;
-                if (cont == 0){
-                    n_nodos = std::stoi(line);
-                }
-                else if (cont == 1){
-
-                    std::vector<std::string> out;
-                    tokenize(line, ' ', out);
-                    for (auto &line: out) { //NODO DEPOT
-                        if (i_arc == 0){ //SOLO SE AGREGA EL NODO DEPOT UNA VEZ
-                            clientes.push_back(std::stoi(line));
-                            break;
-                        }
-                    }
-
-                    cont = cont + 1;
-
-                    while (getline(myfile,line) && cont != n_nodos + 1){ 
-
-                        cont = cont + 1;
-                        std::vector<std::string> out;
-                        tokenize(line, ' ', out);
-                        
-                        for (auto &line: out) {
-                            clientes.push_back(std::stoi(line)); //SE AGREGAN LOS ID DE LOS CLIENTES
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        */
-
-        int vertexNumberA;
-        int vertexNumberB;
-        int indexA;
-        int indexB;
-
-        Node* nodoA;
-
-
-        //PARA EL PRIMER NODO
-        ifstream myfile;
-        //string fileToTest= "peligro-mezcla4-min-riesgo-zona7-2k-AE.3.hazmat";
-
-        //float alpha = atof(argv[2]);
-        //float alpha;
-        float maxlistatabu = atof(argv[3]);
-        int max_its = atoi(argv[4]);
-        int optionGreedy = atoi(argv[5]);
-        
-        
-        myfile.open(fileToTest);
-
-
-
-        vector<int> clientesFile;
-
-        //22821: nodo Depot
-        int n_camiones;
-        int n_nodos;
-        int cont = -1;
-        i = 0;
-        j = 0;
-        
-        vector<float> capacidades;
-        int id_truck = 0;
-        string line;
-
-
-        vector<Cliente*> clientes;
-        vector<Truck*> camiones;
-        vector<int> vector_clientes;
-
-        int clienteVertex;
-        float cantidad;
-        string material;
-        int i_arc;
-        float cantidad_total = 0;
-        if(!myfile.is_open()) {
-          perror("Error open");
-          exit(EXIT_FAILURE);
-        }
-        while(getline(myfile,line)){
-            cont = cont + 1;
-            if (cont == 0){
-                n_nodos = std::stoi(line); //cantidad de nodos
-            }
-            else if (cont >= 1 && cont < n_nodos + 1){
-                i_arc = 0;
-                std::vector<std::string> out;
-                tokenize(line, ' ', out);
-                for (auto &line: out) { 
-                    
-                    if (i_arc == 0){ 
-                        clienteVertex = std::stoi(line);
-                        i_arc = i_arc + 1;
-                    }
-                    else if (i_arc == 1){
-                        cantidad = std::stof(line);
-                        i_arc = i_arc + 1;
-                        cantidad_total = cantidad_total + cantidad;
-                    }
-                    else if (i_arc == 2){
-                        material = line;
-                    }
-
-                }
-                Cliente *client = new Cliente(clienteVertex, cantidad, material);            
-                clientes.push_back(client);
-                vector_clientes.push_back(clienteVertex);
-            }
-            else if (cont == n_nodos + 1 ){
-                //cout << "cont es " << cont << endl; 
-                //cout << "line es " << line << endl;
-                n_camiones = std::stoi(line);
-            }  
-
-            else if (cont == n_nodos+  2){
-                int id = 0;
-                std::vector<std::string> out;
-                tokenize(line, ' ', out);
-                for (auto &line: out) { 
-                    id = id + 1;
-                    Truck *camion = new Truck(id, std::stof(line));
-                    camiones.push_back(camion);
-                }
-            }
-            else if (cont > n_nodos + 2){
-                //cout << line << endl;            
-                break;
-            }
-
-
-        }
-
-        /*GREEDY*/
-        createMatriz(matrizCostosRiesgos, n_nodos);
-
-
-        Capture_Params(argc,argv);
-        srand48(seed);
-        float prob;
-        prob = float_rand(1,clientes.size());
-        //cout << "prob es " << prob << endl;
-        int its = 0;
-        int idClient;
-        int indexClient;
-
-        int idTruck;
-        int indexTruck;
-        string mat_client;
-
-        float minimo;
-
-        vector<string> materiales;
-        materiales.push_back("A");
-        materiales.push_back("B");
-        materiales.push_back("C");
-        materiales.push_back("D");
-        materiales.push_back("E");
-
-
-        /*vector<int> dist
-            = dijkstraDist(v, s, path, 1); //1: long, 2: r1, 3: r2, ..., 6: r5
-        //dist = arreglo de distancias de un nodo para todos  */
-
-        std::vector<int>::iterator itA = std::find(nodos.begin(), nodos.end(), 22821); //22821 es el depot
-        int indexDepot = std::distance(nodos.begin(), itA);
-        
-        int nodo_actual;
-        int posi;
-
-        j = 0;
-
-        //v: vector clase de nodos
-        //nodos: vector entero con id nodos
-
-        //int i_alpha;
-        //vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
-        int result_greedy;
-        int flag = 1;
-
-        vector<Truck*> aux_camiones_greedy;
-        vector <Cliente*> aux_clientes_greedy;
-        
-
-        /*for (i = 0; i < camiones.size(); i++){
-            cout << "Camion " << camiones[i]->id << endl;
-            for (j = 0; j < camiones[i]->clientes.size(); j++){
-                cout << "Cliente " << camiones[i]->clientes[j] << endl;
-            }
-        }*/
-
-        //solucionGreedy(camiones, clientes, vector_clientes, v,
-        //            nodos, materiales, indexDepot, cantidad_total);
-
-        /*for (i = 0; i < camiones.size(); i++){
-            cout << "Camion " << camiones[i]->id << endl;
-            for (j = 0; j < camiones[i]->clientes.size(); j++){
-                cout << "Cliente " << camiones[i]->clientes[j] << endl;
-            }
-        }*/
-
-        while (flag){
-            seed = seed + 1;
-            srand48(seed);
-            //cout << seed << endl;
-            //aux_camiones_greedy = camiones;
-            aux_camiones_greedy.clear();
-            aux_clientes_greedy.clear();
-
-            for (i = 0; i < camiones.size(); i++){
-                Truck *camion = new Truck(camiones[i]->id, camiones[i]->capacidad);
-                aux_camiones_greedy.push_back(camion);                    
-            }
-
-            for (j = 0; j < clientes.size(); j++){
-                Cliente *client = new Cliente(clientes[j]->vertexNumber, clientes[j]->cantidad, clientes[j]->material);            
-                aux_clientes_greedy.push_back(client);
-            }
-
-            /*for (i = 0; i < aux_camiones_greedy.size(); i++){
-                cout << "Camion " << aux_camiones_greedy[i]->id << endl;
-                for (j = 0; j < aux_camiones_greedy[i]->clientes.size(); j++){
-                    cout << "Cliente " << aux_camiones_greedy[i]->clientes[j] << endl;
-                }
-            }*/
-
-            if (optionGreedy == 1){
-                result_greedy = solucionGreedyAzar(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
-                            nodos, materiales, indexDepot, cantidad_total, alpha);
-            }
-            else if(optionGreedy == 2){
-                result_greedy = solucionGreedyListaAzar(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
-                            nodos, materiales, indexDepot, cantidad_total, alpha);
-            }
-            else{
-                result_greedy = solucionGreedy(aux_camiones_greedy, aux_clientes_greedy, vector_clientes, v,
-                            nodos, materiales, indexDepot, cantidad_total, alpha);
-            }
-
-            
-
-            cout << "----------------------------" << endl;
-
-            /*for (i = 0; i < aux_camiones_greedy.size(); i++){
-                cout << "Camion " << aux_camiones_greedy[i]->id << endl;
-                for (j = 0; j < aux_camiones_greedy[i]->clientes.size(); j++){
-                cout << "Cliente " << aux_camiones_greedy[i]->clientes[j] << endl;
-                }
-            }*/
-
-            if (result_greedy){
-                flag = 0;
-            }
-        }
 
 
         camiones = aux_camiones_greedy; 
@@ -2106,7 +2252,7 @@ int main(int argc, char** argv)
 
 
         vector<float> solucionGral = funcion_evaluacion(camiones, v, nodos, clientes, vector_clientes, alpha, 
-                                    materiales, indexDepot);
+                                    materiales, indexDepot, i_alpha);
 
         //cout << "valor es total es " << solucionGral[0] << endl;
         //cout << "valor z1 es " << solucionGral[1] << endl;
@@ -2250,7 +2396,7 @@ int main(int argc, char** argv)
     //REVISAR QUE OTRAS VARIABLES NO SE ESTEN MODIICANDO DENTRO DE LAS FUNCIONES, SINO HACER EL FOR ALFA DESDE EL INICIO DEL MAIN
                     if (vector_compatible(candidate_aux_camiones[c1]->cargados, materiales)){
                         valorFuncEval = funcion_evaluacion(candidate_aux_camiones, v, nodos, clientes, vector_clientes,
-                                                alpha, materiales, indexDepot);    
+                                                alpha, materiales, indexDepot, i_alpha);    
                     }
                     else{
                         valorFuncEval = sol_error;
@@ -2302,7 +2448,7 @@ int main(int argc, char** argv)
                 }*/
                 if (aux_camiones.size() != 0){
                     candidate_aux_camiones = aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, vector_clientes,
-                                                        materiales, indexDepot, tipoMov, c1, c2, pos1, pos2);
+                                                        materiales, indexDepot, tipoMov, c1, c2, pos1, pos2, i_alpha);
                 }
                 else{
                     valorFuncEval = sol_error;                       
@@ -2351,7 +2497,7 @@ int main(int argc, char** argv)
             
 
             sCandidate = funcion_evaluacion(aux_camiones, v, nodos, clientes, vector_clientes,
-                                    alpha, materiales, indexDepot);
+                                    alpha, materiales, indexDepot, i_alpha);
 
             //cout << aux_camiones[1]->clientes[3] << endl;
  
