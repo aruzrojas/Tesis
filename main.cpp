@@ -1727,7 +1727,7 @@ int main(int argc, char** argv)
     clock_t t_total = clock();
     clock_t t_greedy = clock();
     int i;
-    string fileToTest = argv[6];
+    string fileToTest = argv[7];
     int i_alpha;
     //vector<float> alphas {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};   
     //vector<float> alphas {1};
@@ -2016,7 +2016,9 @@ int main(int argc, char** argv)
     //float alpha;
     float maxlistatabu = atof(argv[3]);
     int max_its = atoi(argv[4]);
-    int optionGreedy = atoi(argv[5]);
+    float prob_insert = atof(argv[5]);
+    int optionGreedy = atoi(argv[6]);
+
     
     
     myfile.open(fileToTest);
@@ -2364,7 +2366,7 @@ int main(int argc, char** argv)
 
             //cout << aux_camiones[1]->clientes[3] << endl;
 
-            if (prob < 0.5){
+            if (prob < prob_insert){
                 c1 = float_rand(0, camiones.size());
                 c2 = float_rand(0, camiones.size());
                 pos1 = float_rand(0, camiones[c1]->clientes.size() );
