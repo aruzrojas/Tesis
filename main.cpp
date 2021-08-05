@@ -1314,6 +1314,7 @@ vector <float> movInsert(vector<Truck*> camiones, vector<Node*> v, vector<int> n
     camiones[c1]->cargados.insert(itMatPos1,matClientB);
     camiones[c2]->cargados.erase(camiones[c2]->cargados.begin() + pos2);
 
+
     if (vector_compatible(camiones[c1]->cargados, materiales) && vector_compatible(camiones[c2]->cargados, materiales)){
         //cout << "valor de alpha es " << alpha << endl;
         valorFuncEval = funcion_evaluacion(camiones, v, nodos, clientes, vector_clientes,
@@ -1353,8 +1354,6 @@ vector <float> movInsert(vector<Truck*> camiones, vector<Node*> v, vector<int> n
 
     camiones[c2]->clientes = auxClientesTruck2;
     camiones[c2]->cargados = auxCargadosTruck2;
-
-
 
     return valorFuncEval;
 
@@ -1444,7 +1443,7 @@ vector <float> mov2Opt(vector<Truck*> camiones, vector<Node*> v, vector<int> nod
     }
     else{
         valorFuncEval = sol_error;
-        cout << "retorna sol error " << endl;
+        //cout << "retorna sol error " << endl;
     }
 
     /*cout << "despues del mov" << endl;
@@ -1713,7 +1712,7 @@ vector <Truck*> aplicarMov2Opt(vector <Truck*> camiones, int c1, int i, int k){
 
 vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vector<int> nodos, vector<Cliente*> clientes, float alpha, 
                                 vector<int> vector_clientes, vector<string> materiales, int indexDepot, int tipoMov, 
-                                int c1, int c2, int pos1, int pos2, int i_alpha){
+                                int c1, int c2, int pos1, int i_alpha){
 
     //RECORDAR QUE ESTA FUNCION DEBE RECIBIR AUX
 
@@ -1721,6 +1720,7 @@ vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vec
     int idClientB;
     int i;
     int k;
+    int pos2 = -1;
     vector <int> pos_return;
     vector <float> solS_n;
     vector <float> sol_return;
@@ -1751,12 +1751,10 @@ vector <Truck*> aplicar_movimiento(vector<Truck*> camiones, vector<Node*> v, vec
 
     //solucionantes = funcion_evaluacion(camiones, v, nodos, clientes, vector_clientes, alpha,
                                     //materiales, indexDepot, i_alpha);
-
     //cout << "solucion antes es " << solucionantes[0] << endl;
-
     if (tipoMov == 0){
-        //cout << "mov insert" << endl;
         for (k = 0; k < camiones[c2]->clientes.size(); k++){
+
             solS_n = movInsert(camiones, v, nodos, clientes, vector_clientes,
                                     alpha, materiales, indexDepot, c1, c2, pos1, k, i_alpha);
 
@@ -2559,12 +2557,15 @@ int main(int argc, char** argv)
             //cout << aux_camiones[1]->clientes[3] << endl;
 
             if (prob < prob_insert){
-                c1 = float_rand(0, camiones.size());
-                c2 = float_rand(0, camiones.size());
-                pos1 = float_rand(0, camiones[c1]->clientes.size() );
+                c1 = float_rand(0, aux_camiones.size());
+                c2 = float_rand(0, aux_camiones.size());
+                pos1 = float_rand(0, aux_camiones[c1]->clientes.size() );
                 //pos2 = float_rand(0, camiones[c2]->clientes.size() );
                 pos2 = -1;
                 tipoMov = 0;
+
+
+
 
 
                 //Truck *aux_camion1 = new Truck(camiones[c1]->id, camiones[c1]->capacidad);
@@ -2590,7 +2591,7 @@ int main(int argc, char** argv)
 
                     if (aux_camiones.size() != 0){
                         candidate_aux_camiones = aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, vector_clientes,
-                                                            materiales, indexDepot, tipoMov, c1, c2, pos1, pos2, i_alpha);
+                                                            materiales, indexDepot, tipoMov, c1, c2, pos1, i_alpha);
                     }
                     else{
                         valorFuncEval = sol_error;                       
@@ -2623,7 +2624,7 @@ int main(int argc, char** argv)
             }
             else{ //2-opt
                 //cout << "mov 2opt" << endl;
-                c1 = float_rand(0, camiones.size());
+                c1 = float_rand(0, aux_camiones.size());
                 c2 = -1;
                 pos1 = -1;
                 pos2 = -1;
@@ -2655,7 +2656,7 @@ int main(int argc, char** argv)
                 }*/
                 if (aux_camiones.size() != 0){
                     candidate_aux_camiones = aplicar_movimiento(aux_camiones, v, nodos, aux_clientes, alpha, vector_clientes,
-                                                        materiales, indexDepot, tipoMov, c1, c2, pos1, pos2, i_alpha);
+                                                        materiales, indexDepot, tipoMov, c1, c2, pos1, i_alpha);
                 }
                 else{
                     valorFuncEval = sol_error;                       
